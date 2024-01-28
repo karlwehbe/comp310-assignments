@@ -62,6 +62,10 @@ int interpreter(char* command_args[], int args_size){
         for (i = 3; i < args_size; i++) {
             strcat(value, " ");
             strcat(value, command_args[i]);
+			if (i > 7) {
+				printf("Bad command : set") ;
+				return 1;
+			}
         }
         return set(var, value);
 	
@@ -120,6 +124,7 @@ int quit(){
 
 
 int set(char* var, char* value) {
+
 	char *link = "=";
     char buffer[1000];
     strcpy(buffer, var);
@@ -210,7 +215,7 @@ int my_cd(char* value) {
 	int result = chdir(value);
 
 	if (result != 0) {
-		printf("Bad command : my_cd");
+		printf("Bad command : my_cd\n");
 		return 1;
 	}
     return 0;
