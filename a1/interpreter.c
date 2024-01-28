@@ -6,7 +6,7 @@
 #include "shellmemory.h"
 #include "shell.h"
 
-int MAX_ARGS_SIZE = 7;
+int MAX_ARGS_SIZE = 20;
 
 int badcommand(){
 	printf("%s\n", "Unknown Command");
@@ -209,7 +209,7 @@ int my_touch(char* value) {
 int my_cd(char* value) {
 	int result = chdir(value);
 
-	if (result = 0) {
+	if (result != 0) {
 		printf("Bad command : my_cd");
 		return 1;
 	}
