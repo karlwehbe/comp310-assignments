@@ -225,7 +225,6 @@ int my_cat(char* value) {
         while (fgets(buffer, sizeof(buffer), file) != NULL) {
             printf("%s", buffer);
         }
-		printf("\n");
 
         fclose(file);
         return 0;
