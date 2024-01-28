@@ -235,7 +235,7 @@ int my_cat(char* value) {
         return 0;
 		
     } else {
-        printf("Bad command: my_cat");
+        printf("Bad command: my_cat\n");
         return 1;
     }
 }
