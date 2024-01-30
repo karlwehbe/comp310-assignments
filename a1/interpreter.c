@@ -10,12 +10,14 @@ int MAX_ARGS_SIZE = 20;
 
 int badcommand(){
 	printf("%s\n", "Unknown Command");
+	fflush(stdout);
 	return 1;
 }
 
 // For run command only
 int badcommandFileDoesNotExist(){
 	printf("%s\n", "Bad command: File not found");
+	fflush(stdout);
 	return 3;
 }
 
@@ -120,6 +122,7 @@ run SCRIPT.TXT		Executes the file SCRIPT.TXT\n";
 
 int quit(){
 	printf("%s\n", "Bye!");
+	fflush(stdout);
 	exit(0);
 }
 
@@ -138,6 +141,7 @@ int set(char* var, char* value) {
 
 int print(char* var){
 	printf("%s\n", mem_get_value(var)); 
+	fflush(stdout);
 	return 0;
 }
 
@@ -176,6 +180,7 @@ int echo(char* var) {
 	if (s[0] == '$') memmove(s, s+1, strlen(s));
 	
 	printf("%s\n", mem_get_value(s));
+	fflush(stdout);
 
 	return 0;
 }
@@ -224,6 +229,7 @@ int my_cd(char* value) {
 
 	if (result != 0) {
 		printf("Bad command : my_cd\n");
+		fflush(stdout);
 		return 1;
 	}
     return 0;
@@ -244,6 +250,7 @@ int my_cat(char* value) {
 		
     } else {
         printf("Bad command: my_cat\n");
+		fflush(stdout);
         return 1;
     }
 }
