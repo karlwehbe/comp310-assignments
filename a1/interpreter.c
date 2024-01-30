@@ -61,11 +61,18 @@ int interpreter(char* command_args[], int args_size){
 		char* var = command_args[1];
         char* value = command_args[2];
 
+		if (strlen(var) < 1) {
+			printf("Bad command : set\n");
+			fflush(stdout);
+			return 1;
+		}
+
         for (i = 3; i < args_size; i++) {
             strcat(value, " ");
             strcat(value, command_args[i]);
 			if (i > 6) {
 				printf("Bad command : set\n") ;
+				fflush(stdout);
 				return 1;
 			}
         }
@@ -128,11 +135,6 @@ int quit(){
 
 
 int set(char* var, char* value) {
-	if (var = NULL) {
-		printf("Bad command : set\n") ;
-		fflush(stdout);
-		return 1;
-	}
 
 	char *link = "=";
     char buffer[1000];
