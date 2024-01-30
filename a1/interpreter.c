@@ -128,7 +128,7 @@ int quit(){
 
 
 int set(char* var, char* value) {
-	if (var = " ") {
+	if (var = NULL) {
 		printf("Bad command : set\n") ;
 		fflush(stdout);
 		return 1;
