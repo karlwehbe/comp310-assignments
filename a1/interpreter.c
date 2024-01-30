@@ -55,7 +55,7 @@ int interpreter(char* command_args[], int args_size){
 		return quit();
 
 	} else if (strcmp(command_args[0], "set") == 0) {
-		if (args_size < 2) return badcommand();	
+		if (args_size < 3) return badcommand();	
 		char* var = command_args[1];
         char* value = command_args[2];
 
