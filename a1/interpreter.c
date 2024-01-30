@@ -125,7 +125,6 @@ int quit(){
 
 
 int set(char* var, char* value) {
-
 	char *link = "=";
     char buffer[1000];
     strcpy(buffer, var);
@@ -172,7 +171,7 @@ int echo(char* var) {
 		printf("%s\n", var);
 		return 0;
 	}
-	char s[101];
+	char s[102];
 	strcpy(s, var);
 	if (s[0] == '$') memmove(s, s+1, strlen(s));
 	
