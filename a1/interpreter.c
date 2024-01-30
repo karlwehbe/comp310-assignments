@@ -129,11 +129,11 @@ int quit(){
 
 int set(char* var, char* value) {
 	if (var = " ") {
-		printf("Bad command : set") ;
+		printf("Bad command : set\n") ;
 		fflush(stdout);
 		return 1;
 	}
-	
+
 	char *link = "=";
     char buffer[1000];
     strcpy(buffer, var);
