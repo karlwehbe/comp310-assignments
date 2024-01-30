@@ -70,6 +70,12 @@ int interpreter(char* command_args[], int args_size){
         for (i = 3; i < args_size; i++) {
             strcat(value, " ");
             strcat(value, command_args[i]);
+			
+			if (strlen(command_args[i]) < 1) {
+				printf("Bad command : set\n") ;
+				fflush(stdout);
+				return 1;	
+			}
 			if (i > 6) {
 				printf("Bad command : set\n") ;
 				fflush(stdout);
