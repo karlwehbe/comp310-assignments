@@ -71,7 +71,7 @@ int interpreter(char* command_args[], int args_size){
             strcat(value, " ");
             strcat(value, command_args[i]);
 
-			if (i > 6) {
+			if (i > 6 || strlen(command_args[i]) == 0) {
 				printf("Bad command : set\n") ;
 				fflush(stdout);
 				return 1;
@@ -137,7 +137,7 @@ int quit(){
 
 int set(char* var, char* value) {
 
-	if (strlen(value) < 1) {
+	if (strlen(value) < 1 || *value == ' ') {
 		printf("Bad command : set\n") ;
 		fflush(stdout);
 		return 1;	
