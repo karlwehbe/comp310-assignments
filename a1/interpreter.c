@@ -202,6 +202,7 @@ int echo(char* var) {
 
 
 int my_ls(){
+	fflush(stdout);
 	system("ls");
 	return 0;
 }
@@ -214,7 +215,8 @@ int my_mkdir(char* value) {
 
 	strcpy(command, "mkdir ");
 	strcat(command, value);
-	
+
+	fflush(stdout);
 	system(command);
 
 	free(command);
@@ -233,6 +235,7 @@ int my_touch(char* value) {
 	strcpy(command, "touch ");
 	strcat(command, value);
 
+	fflush(stdout);
 	system(command);
 
     return 0;
