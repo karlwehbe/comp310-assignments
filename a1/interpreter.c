@@ -10,14 +10,12 @@ int MAX_ARGS_SIZE = 20;
 
 int badcommand(){
 	printf("%s\n", "Unknown Command");
-	fflush(stdout);
 	return 1;
 }
 
 // For run command only
 int badcommandFileDoesNotExist(){
 	printf("%s\n", "Bad command: File not found");
-	fflush(stdout);
 	return 3;
 }
 
@@ -63,7 +61,6 @@ int interpreter(char* command_args[], int args_size){
 
 		if (strlen(var) < 1) {
 			printf("Bad command : set\n");
-			fflush(stdout);
 			return 1;
 		}
 
@@ -73,7 +70,6 @@ int interpreter(char* command_args[], int args_size){
 
 			if (i > 6 || strlen(command_args[i]) == 0) {
 				printf("Bad command : set\n") ;
-				fflush(stdout);
 				return 1;
 			}
         }
@@ -139,7 +135,6 @@ int set(char* var, char* value) {
 
 	if (strlen(value) < 1 || *value == ' ') {
 		printf("Bad command : set\n") ;
-		fflush(stdout);
 		return 1;	
 	}
 
@@ -156,7 +151,6 @@ int set(char* var, char* value) {
 
 int print(char* var){
 	printf("%s\n", mem_get_value(var)); 
-	fflush(stdout);
 	return 0;
 }
 
@@ -195,14 +189,12 @@ int echo(char* var) {
 	if (s[0] == '$') memmove(s, s+1, strlen(s));
 	
 	printf("%s\n", mem_get_value(s));
-	fflush(stdout);
 
 	return 0;
 }
 
 
 int my_ls(){
-	fflush(stdout);
 	system("ls");
 	return 0;
 }
@@ -216,7 +208,6 @@ int my_mkdir(char* value) {
 	strcpy(command, "mkdir ");
 	strcat(command, value);
 
-	fflush(stdout);
 	system(command);
 
 	free(command);
@@ -235,7 +226,6 @@ int my_touch(char* value) {
 	strcpy(command, "touch ");
 	strcat(command, value);
 
-	fflush(stdout);
 	system(command);
 
     return 0;
@@ -247,7 +237,6 @@ int my_cd(char* value) {
 
 	if (result != 0) {
 		printf("Bad command : my_cd\n");
-		fflush(stdout);
 		return 1;
 	}
     return 0;
@@ -268,7 +257,6 @@ int my_cat(char* value) {
 		
     } else {
         printf("Bad command: my_cat\n");
-		fflush(stdout);
         return 1;
     }
 }
