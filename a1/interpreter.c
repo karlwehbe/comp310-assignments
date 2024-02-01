@@ -126,7 +126,6 @@ run SCRIPT.TXT		Executes the file SCRIPT.TXT\n";
 
 int quit(){
 	printf("%s\n", "Bye!");
-	fflush(stdout);
 	exit(0);
 }
 
