@@ -178,19 +178,38 @@ int run(char* script){
 }
 
 int echo(char* var) {
+	if (strlen(var) < 1) {
+		printf("Bad command : echo\n");
+		return 1;
+	}
+
 	if(var[0] != '$') { 
 		printf("%s\n", var);
 		return 0;
 	}
+
 	char s[102];
 	strcpy(s, var);
-	if (s[0] == '$') memmove(s, s+1, strlen(s));
-	
-	char result[100] = mem_get_value(s);
-	char noex = "Variable does not exist";
-	if (strcmp(result, noex) != 0) printf("\n");
 
-	printf("%s\n", result);
+	if (s[0] == '$') {
+		if (strlen(s) == 1) {
+			printf("Bad command : echo\n");
+			return 1;	
+		}
+		memmove(s, s+1, strlen(s));
+		char result[100];
+		strcpy(result, mem_get_value(s));
+		char noex[] = "Variable does not exist";
+
+		if (strcmp(result, noex) == 0) {
+			printf("\n");
+			return 1;
+		} else {
+		printf("%s\n", result);
+		return 0;	
+		}
+
+	}
 	return 0;
 }
 
