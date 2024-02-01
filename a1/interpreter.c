@@ -120,7 +120,6 @@ print VAR		Displays the STRING assigned to VAR\n \
 run SCRIPT.TXT		Executes the file SCRIPT.TXT\n";
 
 	printf("%s\n", help_string);
-	fflush(stdout);
 	return 0;
 }
 
@@ -187,8 +186,11 @@ int echo(char* var) {
 	strcpy(s, var);
 	if (s[0] == '$') memmove(s, s+1, strlen(s));
 	
-	printf("%s\n", mem_get_value(s));
+	char result[100] = mem_get_value(s);
+	char noex = "Variable does not exist";
+	if (strcmp(result, noex) != 0) printf("\n");
 
+	printf("%s\n", result);
 	return 0;
 }
 
@@ -207,8 +209,12 @@ int my_mkdir(char* value) {
 	strcpy(command, "mkdir ");
 	strcat(command, value);
 
-	system(command);
+	int result = system(command);
 
+	if (result != 0) {
+		printf("Bad command : my_mkdir\n");
+		return 1;
+	}
 	free(command);
 
     return 0;
@@ -216,7 +222,6 @@ int my_mkdir(char* value) {
 
 
 int my_touch(char* value) {
-
 	int command_length = strlen("touch ") + strlen(value) + 1;
     
     char *command = (char *)malloc(command_length * sizeof(char));
@@ -225,7 +230,12 @@ int my_touch(char* value) {
 	strcpy(command, "touch ");
 	strcat(command, value);
 
-	system(command);
+	int result = system(command);
+
+	if (result != 0) {
+		printf("Bad command : my_touch\n");
+		return 1;
+	}
 
     return 0;
 }
