@@ -12,6 +12,17 @@ int MAX_USER_INPUT = 1000;
 int parseInput(char ui[]);
 
 int main(int argc, char *argv[]) {
+    //backing store goes here
+    char *filename = "backingstore";
+    int i = chdir(filename);
+    if (i == 0) {
+        chdir("cd ..");
+        system("rm -r backingstore");
+        system("mkdir backingstore");
+    } else {
+        system("mkdir backingstore");
+    }
+
 	printf("%s\n", "Shell v2.0\n");
 
 	char prompt = '$';  				// Shell prompt

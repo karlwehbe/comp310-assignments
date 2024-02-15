@@ -45,6 +45,7 @@ int my_touch(char* filename);
 int my_cd(char* dirname);
 int exec(char *fname1, char *fname2, char *fname3); //, char* policy, bool background, bool mt);
 
+
 // Interpret commands and their arguments
 int interpreter(char* command_args[], int args_size){
 	if (args_size < 1)
@@ -96,7 +97,7 @@ int interpreter(char* command_args[], int args_size){
 	else if (strcmp(command_args[0], "run") == 0)
 	{ // run
 		if (args_size < 2) return handle_error(TOO_FEW_TOKENS);
-		if (args_size > 2) return handle_error(TOO_MANY_TOKENS);	
+		if (args_size > 2) return handle_error(TOO_MANY_TOKENS);
 		return run(command_args[1]);
 	}
 	else if (strcmp(command_args[0], "echo") == 0)
@@ -154,6 +155,20 @@ run SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 int quit(){
 	printf("%s\n", "Bye!");
 	ready_queue_destory();
+	
+	char *bs = "backingstore";
+	char buffer[1024];
+    char *cwd;
+
+	cwd = getcwd(buffer, sizeof(buffer));	
+
+    if (strstr(cwd, bs) != 0) {			// checks if we are not currently in the backingstore directory
+		chdir("..");
+		system("rm -r backingstore");		// if we are then we go back to main directory and we remove it
+	} else {											
+		system("rm -r backingstore");		// if we are not we simply remove the backing store.
+	}
+
 	exit(0);
 }
 
@@ -236,6 +251,7 @@ int run(char* script){
 	schedule_by_policy("FCFS"); //, false);
 	return errCode;
 }
+
 
 int exec(char *fname1, char *fname2, char *fname3) {
 	int error_code = 0;
