@@ -159,7 +159,6 @@ int quit(){
 	char *bs = "backingstore";
 	char buffer[1024];
     char *cwd;
-
 	cwd = getcwd(buffer, sizeof(buffer));	
 
     if (strstr(cwd, bs) != 0) {			// checks if we are not currently in the backingstore directory
