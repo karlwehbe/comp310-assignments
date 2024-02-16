@@ -115,8 +115,8 @@ void printShellMemory(){
  * 
  * returns: error code, 21: no space left
  */
-int load_file(FILE* fp, int* pStart, int* pEnd, char* filename)
-{
+int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
+
 	char *line;
     size_t i;
     int error_code = 0;

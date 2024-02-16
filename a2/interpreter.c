@@ -45,7 +45,7 @@ int my_touch(char* filename);
 int my_cd(char* dirname);
 int exec(char *fname1, char *fname2, char *fname3); //, char* policy, bool background, bool mt);
 int resetmem();
-
+int loadtobs(char* filename);
 
 // Interpret commands and their arguments
 int interpreter(char* command_args[], int args_size){
@@ -246,6 +246,7 @@ int run(char* script){
 	if(errCode == 11){
 		return handle_error(errCode);
 	}
+	loadtobs(script);
 	//run with FCFS
 	schedule_by_policy("FCFS"); //, false);
 	return errCode;
@@ -259,18 +260,21 @@ int exec(char *fname1, char *fname2, char *fname3) {
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
+		loadtobs(fname1);
     }
     if(fname2 != NULL){
         error_code = process_initialize(fname2);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
+		loadtobs(fname2);
     }
     if(fname3 != NULL){
         error_code = process_initialize(fname3);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
+		loadtobs(fname3);
     } 
 	error_code = schedule_by_policy("RR");
 	if(error_code != 0){
@@ -285,4 +289,36 @@ int resetmem() {
 		}	
 	}
    return 1;
+}
+
+int loadtobs(char* filename) {
+	char uniqueFilename[100];
+    char path[100];
+    int uniqueId = 1; // Start with 1 to append to the filename
+
+    snprintf(uniqueFilename, sizeof(uniqueFilename), "%s_%d", filename, uniqueId);
+    snprintf(path, sizeof(path), "/code/backingstore/%s", uniqueFilename);
+
+     while (fileExists(path)) {
+        snprintf(uniqueFilename, sizeof(uniqueFilename), "%s_%d", filename, ++uniqueId);
+        snprintf(path, sizeof(path), "/code/backingstore/%s", uniqueFilename);
+    }
+
+    char copyCommand[100];
+    snprintf(copyCommand, sizeof(copyCommand),"cp /code/%s /code/backingstore \n", filename); 
+    system(copyCommand);
+
+    char moveCommand[100];
+    snprintf(moveCommand, sizeof(moveCommand), "mv /code/backingstore/%s %s", filename, path);
+    system(moveCommand);
+
+    char scriptpath[100];
+    snprintf(scriptpath, sizeof(scriptpath), "/code/backingstore/%s \n", uniqueFilename);
+    
+    FILE* file = fopen(scriptpath, "r");
+
+    if (!file) {
+        return FILE_ERROR;
+    }
+
 }

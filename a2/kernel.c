@@ -32,11 +32,11 @@ int process_initialize(char *filename){
     PCB* newPCB = makePCB(*start,*end);
     QueueNode *node = malloc(sizeof(QueueNode));
     node->pcb = newPCB;
-
+                    
     ready_queue_add_to_tail(node);
-
-    fclose(fp);
+    fclose(fp); 
     return 0;
+
 }
 
 int shell_process_initialize(){
@@ -186,4 +186,3 @@ int schedule_by_policy(char* policy){ //, bool mt){
     }
     return 0;
 }
-
