@@ -88,3 +88,7 @@ int parseInput(char *ui) {
     errorCode = interpreter(words, w);
     return errorCode;
 }
+
+void resetmem() {
+    ///to do
+}
