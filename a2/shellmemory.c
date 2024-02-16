@@ -143,7 +143,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 	}
 	i = candidate;
 	//shell memory is full
-	if(hasSpaceLeft == 0){
+	if(hasSpaceLeft == 0){	
 		error_code = 21;
 		return error_code;
 	}
