@@ -321,4 +321,6 @@ int loadtobs(char* filename) {
         return FILE_ERROR;
     }
 
+	return 0;
+
 }
