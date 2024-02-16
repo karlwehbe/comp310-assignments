@@ -5,6 +5,7 @@
 
 #define SHELL_MEM_LENGTH 1000
 
+char *getvariable(int index);
 
 struct memory_struct{
 	char *var;
@@ -40,6 +41,7 @@ char *extract(char *model) {
 
 void mem_init(){
 	int i;
+	
 	for (i=0; i<1000; i++){		
 		shellmemory[i].var = "none";
 		shellmemory[i].value = "none";
@@ -49,7 +51,7 @@ void mem_init(){
 // Set key value pair
 void mem_set_value(char *var_in, char *value_in) {
 	int i;
-	for (i=0; i<1000; i++){
+	for (i=300; i<1000; i++){	// changed from 0 TO 300
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			shellmemory[i].value = strdup(value_in);
 			return;
@@ -57,7 +59,7 @@ void mem_set_value(char *var_in, char *value_in) {
 	}
 
 	//Value does not exist, need to find a free spot.
-	for (i=0; i<1000; i++){
+	for (i=300; i<1000; i++){			// changed from 0 TO 300
 		if (strcmp(shellmemory[i].var, "none") == 0){
 			shellmemory[i].var = strdup(var_in);
 			shellmemory[i].value = strdup(value_in);
@@ -72,7 +74,7 @@ void mem_set_value(char *var_in, char *value_in) {
 //get value based on input key
 char *mem_get_value(char *var_in) {
 	int i;
-	for (i=0; i<1000; i++){
+	for (i=300; i<1000; i++){	// changed from 0 TO 300
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			return strdup(shellmemory[i].value);
 		} 
@@ -84,7 +86,7 @@ char *mem_get_value(char *var_in) {
 
 void printShellMemory(){
 	int count_empty = 0;
-	for (int i = 0; i < SHELL_MEM_LENGTH; i++){
+	for (int i = 0; i < SHELL_MEM_LENGTH; i++){		
 		if(strcmp(shellmemory[i].var,"none") == 0){
 			count_empty++;
 		}
@@ -120,11 +122,11 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename)
     int error_code = 0;
 	bool hasSpaceLeft = false;
 	bool flag = true;
-	i=101;
+	i=0;
 	size_t candidate;
-	while(flag){
+	while(flag && i < 300){
 		flag = false;
-		for (i; i < SHELL_MEM_LENGTH; i++){
+		for (i; i < 300; i++){
 			if(strcmp(shellmemory[i].var,"none") == 0){
 				*pStart = (int)i;
 				hasSpaceLeft = true;
@@ -195,4 +197,9 @@ void mem_free_lines_between(int start, int end){
 		shellmemory[i].var = "none";
 		shellmemory[i].value = "none";
 	}
+}
+
+char *getvariable(int index) {
+	if(index<0 || index > SHELL_MEM_LENGTH) return NULL; 
+	return shellmemory[index].var;
 }

@@ -44,6 +44,7 @@ int my_mkdir(char* dirname);
 int my_touch(char* filename);
 int my_cd(char* dirname);
 int exec(char *fname1, char *fname2, char *fname3); //, char* policy, bool background, bool mt);
+int resetmem();
 
 
 // Interpret commands and their arguments
@@ -135,6 +136,10 @@ int interpreter(char* command_args[], int args_size){
 			return exec(command_args[1],command_args[2],NULL); 
 		else if(args_size == 4)
 			return exec(command_args[1],command_args[2],command_args[3]);
+
+	} else if (strcmp(command_args[0], "resetmem")==0) {
+		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
+		return resetmem();
 	}
 	
 	return handle_error(BAD_COMMAND);
@@ -271,4 +276,13 @@ int exec(char *fname1, char *fname2, char *fname3) {
 	if(error_code != 0){
 		return handle_error(error_code);
 	}
+}
+
+int resetmem() {
+	for (int i = 300; i < 1000; i++) {
+		if (strcmp(mem_get_value_at_line(i), "none") != 0) {
+			mem_set_value(getvariable(i), "none");
+		}	
+	}
+   return 1;
 }

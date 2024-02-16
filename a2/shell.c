@@ -89,6 +89,3 @@ int parseInput(char *ui) {
     return errorCode;
 }
 
-void resetmem() {
-    ///to do
-}
