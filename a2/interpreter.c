@@ -155,17 +155,12 @@ run SCRIPT.TXT		Executes the file SCRIPT.TXT\n ";
 int quit(){
 	printf("%s\n", "Bye!");
 	ready_queue_destory();
-	
-	char *bs = "backingstore";
-	char buffer[1024];
-    char *cwd;
-	cwd = getcwd(buffer, sizeof(buffer));	
 
-    if (strstr(cwd, bs) != 0) {			// checks if we are not currently in the backingstore directory
-		chdir("..");
-		system("rm -r backingstore");		// if we are then we go back to main directory and we remove it
-	} else {											
-		system("rm -r backingstore");		// if we are not we simply remove the backing store.
+    if (chdir("/code") == 0) {			// changes to main directory /code
+		system("rm -r backingstore");		
+	} else {	
+		chdir("..");									
+		system("rm -r backingstore");		
 	}
 
 	exit(0);
