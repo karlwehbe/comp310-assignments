@@ -46,6 +46,7 @@ int my_cd(char* dirname);
 int exec(char *fname1, char *fname2, char *fname3); //, char* policy, bool background, bool mt);
 int resetmem();
 int loadtobs(char* filename);
+int fileExists(char* path);
 
 // Interpret commands and their arguments
 int interpreter(char* command_args[], int args_size){
@@ -323,4 +324,13 @@ int loadtobs(char* filename) {
 
 	return 0;
 
+}
+
+int fileExists(char *path) {
+    FILE *file = fopen(path, "r");
+    if (file) {
+        fclose(file); 
+        return 1; 
+    }
+    return 0; 
 }
