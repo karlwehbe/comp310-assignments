@@ -45,7 +45,7 @@ int my_touch(char* filename);
 int my_cd(char* dirname);
 int exec(char *fname1, char *fname2, char *fname3); //, char* policy, bool background, bool mt);
 int resetmem();
-int loadtobs(char* filename);
+char* loadtobs(char* filename);
 int fileExists(char* path);
 
 // Interpret commands and their arguments
@@ -141,8 +141,12 @@ int interpreter(char* command_args[], int args_size){
 	} else if (strcmp(command_args[0], "resetmem")==0) {
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		return resetmem();
+
+	} else if (strcmp(command_args[0], "printShell")==0) {
+		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
+		printShellMemory();
+		return 1;
 	}
-	
 	return handle_error(BAD_COMMAND);
 }
 
@@ -243,11 +247,11 @@ int run(char* script){
 	//errCode 11: bad command file does not exist
 	int errCode = 0;
 	//load script into shell
-	errCode = process_initialize(script);
+	char* filename1 = loadtobs(script);
+    errCode = process_initialize(filename1);
 	if(errCode == 11){
 		return handle_error(errCode);
 	}
-	loadtobs(script);
 	//run with FCFS
 	schedule_by_policy("FCFS"); //, false);
 	return errCode;
@@ -257,26 +261,32 @@ int run(char* script){
 int exec(char *fname1, char *fname2, char *fname3) {
 	int error_code = 0;
 	if(fname1 != NULL){
-        error_code = process_initialize(fname1);
+		char* filename1 = loadtobs(fname1);
+        error_code = process_initialize(filename1);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
-		loadtobs(fname1);
+		
     }
-    if(fname2 != NULL){
-        error_code = process_initialize(fname2);
+    
+	
+	if(fname2 != NULL){
+		char* filename2 = loadtobs(fname2);
+        error_code = process_initialize(filename2);
 		if(error_code != 0){
 			return handle_error(error_code);
-		}
-		loadtobs(fname2);
+		}	
     }
+
     if(fname3 != NULL){
-        error_code = process_initialize(fname3);
+		char* filename3 = loadtobs(fname3);
+        error_code = process_initialize(filename3);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
-		loadtobs(fname3);
-    } 
+    }
+
+
 	error_code = schedule_by_policy("RR");
 	if(error_code != 0){
 		return handle_error(error_code);
@@ -284,15 +294,16 @@ int exec(char *fname1, char *fname2, char *fname3) {
 }
 
 int resetmem() {
-	for (int i = 300; i < 1000; i++) {
+	for (int i = 0; i < 1000; i++) {
 		if (strcmp(mem_get_value_at_line(i), "none") != 0) {
 			mem_set_value(getvariable(i), "none");
-		}	
+		}
+		resetvariable(i);	
 	}
    return 1;
 }
 
-int loadtobs(char* filename) {
+char* loadtobs(char* filename) {
 	char uniqueFilename[100];
     char path[100];
     int uniqueId = 1; // Start with 1 to append to the filename
@@ -313,17 +324,14 @@ int loadtobs(char* filename) {
     snprintf(moveCommand, sizeof(moveCommand), "mv /code/backingstore/%s %s", filename, path);
     system(moveCommand);
 
-    char scriptpath[100];
-    snprintf(scriptpath, sizeof(scriptpath), "/code/backingstore/%s \n", uniqueFilename);
+    size_t scriptsize = strlen("/code/backingstore/") + strlen(uniqueFilename) + 1; // +1 for null terminator only
+	char* scriptpath = malloc(scriptsize);
+	if (scriptpath == NULL) {
+		return NULL; // Ensure memory allocation success
+	}
+	snprintf(scriptpath, scriptsize, "/code/backingstore/%s", uniqueFilename);
     
-    FILE* file = fopen(scriptpath, "r");
-
-    if (!file) {
-        return FILE_ERROR;
-    }
-
-	return 0;
-
+	return scriptpath;
 }
 
 int fileExists(char *path) {

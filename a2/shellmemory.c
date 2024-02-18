@@ -6,6 +6,7 @@
 #define SHELL_MEM_LENGTH 1000
 
 char *getvariable(int index);
+void *resetvariable(int index);
 
 struct memory_struct{
 	char *var;
@@ -13,6 +14,13 @@ struct memory_struct{
 };
 
 struct memory_struct shellmemory[SHELL_MEM_LENGTH];
+
+// Helper Function to create and allocate frame : TODO
+
+// where the FRAME STORE and Variable store are;
+const int FRAME_STORE_SIZE = 2;
+const int FRAME_SIZE = 3;
+const int THRESHOLD = FRAME_SIZE * FRAME_STORE_SIZE;
 
 // Helper functions
 int match(char *model, char *var) {
@@ -124,6 +132,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 	bool flag = true;
 	i=0;
 	size_t candidate;
+
 	while(flag && i < 300){
 		flag = false;
 		for (i; i < 300; i++){
@@ -133,6 +142,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 				break;
 			}
 		}
+
 		candidate = i;
 		for(i; i < SHELL_MEM_LENGTH; i++){
 			if(strcmp(shellmemory[i].var,"none") != 0){
@@ -148,14 +158,14 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 		return error_code;
 	}
     
-    for (size_t j = i; j < SHELL_MEM_LENGTH; j++){
+    for (size_t j = i; j < 300; j++){
         if(feof(fp))
         {
             *pEnd = (int)j-1;
             break;
         }else{
-			line = calloc(1, SHELL_MEM_LENGTH);
-			if (fgets(line, SHELL_MEM_LENGTH, fp) == NULL)
+			line = calloc(1, 300);
+			if (fgets(line, 300, fp) == NULL)
 			{
 				continue;
 			}
@@ -169,7 +179,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 	if(!feof(fp)){
 		error_code = 21;
 		//clean up the file in memory
-		for(int j = 1; i <= SHELL_MEM_LENGTH; i ++){
+		for(int j = 1; i <= 300; i ++){
 			shellmemory[j].var = "none";
 			shellmemory[j].value = "none";
     	}
@@ -202,4 +212,11 @@ void mem_free_lines_between(int start, int end){
 char *getvariable(int index) {
 	if(index<0 || index > SHELL_MEM_LENGTH) return NULL; 
 	return shellmemory[index].var;
+}
+
+void *resetvariable(int index) {
+
+	if (strcmp(shellmemory[index].value, "none") == 0){
+		shellmemory[index].var = "none";
+	}
 }
