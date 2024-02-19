@@ -142,9 +142,13 @@ int interpreter(char* command_args[], int args_size){
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		return resetmem();
 
-	} else if (strcmp(command_args[0], "printShell")==0) {
+	} else if (strcmp(command_args[0], "printsm")==0) {
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		printShellMemory();
+		return 1;
+	} else if (strcmp(command_args[0], "printfm")==0) {
+		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
+		printFrameMemory();
 		return 1;
 	}
 	return handle_error(BAD_COMMAND);
@@ -267,8 +271,7 @@ int exec(char *fname1, char *fname2, char *fname3) {
 			return handle_error(error_code);
 		}
 		
-    }
-    
+    } 
 	
 	if(fname2 != NULL){
 		char* filename2 = loadtobs(fname2);

@@ -15,7 +15,10 @@ int main(int argc, char *argv[]) {
     //backing store goes here
     
     chdir("/code");
-    system("rm -r backingstore");
+    if (chdir("backingstore") == 0) {
+        chdir("..");
+        system("rm -r backingstore"); 
+    }
     system("mkdir backingstore");
   
 
@@ -31,6 +34,7 @@ int main(int argc, char *argv[]) {
 	
 	//init shell memory
 	mem_init();
+    framestore_init();
 
 	while(1) {						
         if (isatty(fileno(stdin))) printf("%c ",prompt);

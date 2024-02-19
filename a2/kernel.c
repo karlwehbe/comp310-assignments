@@ -25,6 +25,7 @@ int process_initialize(char *filename){
 		return FILE_DOES_NOT_EXIST;
     }
     int error_code = load_file(fp, start, end, filename);
+    
     if(error_code != 0){
         fclose(fp);
         return FILE_ERROR;
@@ -33,7 +34,7 @@ int process_initialize(char *filename){
     QueueNode *node = malloc(sizeof(QueueNode));
     node->pcb = newPCB;
                     
-    ready_queue_add_to_tail(node);
+    ready_queue_add_to_tail(node);    
     fclose(fp); 
     return 0;
 

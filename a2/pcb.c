@@ -19,5 +19,8 @@ PCB* makePCB(int start, int end){
     newPCB->end = end;
     newPCB->job_length_score = 1+end-start;
     newPCB->priority = false;
+    //to do : add page table : array of pages : PAGE **page_table
+    //int number of pages 
+
     return newPCB;
 }
