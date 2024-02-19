@@ -4,7 +4,7 @@
 #include<stdbool.h>
 
 #define SHELL_MEM_LENGTH 1000
-#define FRAMESTORE_SIZE 600
+#define FRAMESTORE_SIZE 300
 
 char *getvariable(int index);
 void *resetvariable(int index);
@@ -15,40 +15,7 @@ struct memory_struct{
 };
 
 struct memory_struct shellmemory[SHELL_MEM_LENGTH];
-struct memory_struct frame_store[FRAMESTORE_SIZE];
 
-
-
-void loadtoframe(int i, char* filename) {
-
-	FILE* fp = fopen(filename, "r");
-
-    ssize_t read;
-	size_t len = 0;
-	char* line;
-	int linesRead = 0;
-
-	if (i % 3 != 0) {
-		while (i % 3 != 0) {
-			i++;
-		}
-	}
-	
-	for (int j = i; j < FRAMESTORE_SIZE; j+=3) {
-		linesRead = 0;
-	
-		while (j < FRAMESTORE_SIZE && linesRead < 3 && fgets(line, 20, fp) != NULL) {
-			printf("%i\n", linesRead);
-			
-			line[strcspn(line, "\n")] = 0;
-			printf("line is : %s \n", line);	
-			frame_store[j + linesRead].var = filename; 
-			frame_store[j + linesRead].value = line;
-			linesRead++;
-		}
-	}
-	fclose(fp);
-}
 
 
 // Helper functions
@@ -84,17 +51,12 @@ void mem_init(){
 	}
 }
 
-void framestore_init() {
-	for (int j = 0; j < FRAMESTORE_SIZE; j++) {
-		frame_store[j].var = "none";
-		frame_store[j].value = "none";	
-	}
-}
+
 
 // Set key value pair
 void mem_set_value(char *var_in, char *value_in) {
 	int i;
-	for (i=0; i<SHELL_MEM_LENGTH; i++){	
+	for (i=300; i<SHELL_MEM_LENGTH; i++){	
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			shellmemory[i].value = strdup(value_in);
 			return;
@@ -102,7 +64,7 @@ void mem_set_value(char *var_in, char *value_in) {
 	}
 
 	//Value does not exist, need to find a free spot.
-	for (i=0; i<SHELL_MEM_LENGTH; i++){		
+	for (i=300; i<SHELL_MEM_LENGTH; i++){		
 		if (strcmp(shellmemory[i].var, "none") == 0){
 			shellmemory[i].var = strdup(var_in);
 			shellmemory[i].value = strdup(value_in);
@@ -117,7 +79,7 @@ void mem_set_value(char *var_in, char *value_in) {
 //get value based on input key
 char *mem_get_value(char *var_in) {
 	int i;
-	for (i=0; i<SHELL_MEM_LENGTH; i++){	
+	for (i=300; i<SHELL_MEM_LENGTH; i++){	
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			return strdup(shellmemory[i].value);
 		} 
@@ -140,18 +102,6 @@ void printShellMemory(){
 	printf("\n\t%d lines in shell_mem total, %d lines in use, %d lines free\n\n", SHELL_MEM_LENGTH, SHELL_MEM_LENGTH-count_empty, count_empty);
 }
 
-void printFrameMemory() {
-	int count_empty = 0;
-	for (int i = 0; i < FRAMESTORE_SIZE; i++){		
-		if(strcmp(frame_store[i].var,"none") == 0){
-			count_empty++;
-		}
-		else{
-			printf("\nline %d in frame_store: key: %s\t\tvalue: %s\n", i, frame_store[i].var, frame_store[i].value);
-		}
-    }
-	printf("\n\t%d lines in frame_store total, %d lines in use, %d lines free\n\n", FRAMESTORE_SIZE, FRAMESTORE_SIZE-count_empty, count_empty);	
-}
 
 
 /*
@@ -205,37 +155,50 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 	}
 
 
-    for (size_t j = i; j < 300; j++){
+	int linesRead = 0;
+	if (i % 3 != 0) {
+		while (i % 3 != 0) {
+			i++;
+		}
+	}
+
+	for (size_t j = i; j < 300; j+=3){
+		linesRead = 0;
+
         if(feof(fp)) {
             *pEnd = (int)j-1;
             break;
         } else{
-			line = calloc(1, SHELL_MEM_LENGTH);
-			if (fgets(line, SHELL_MEM_LENGTH, fp) == NULL)
-			{
-				continue;
+			while (j < FRAMESTORE_SIZE && linesRead < 3 && !feof(fp)) {
+				line = calloc(1, FRAMESTORE_SIZE);
+				if (fgets(line, FRAMESTORE_SIZE, fp) == NULL)
+				{
+					continue;
+				}
+				shellmemory[j + linesRead].var = strdup(filename);
+				shellmemory[j + linesRead].value = strndup(line, strlen(line));
+				if (strncmp(line, "set ", 4) == 0) {
+					char val[100], var[100];
+					if (sscanf(line, "set %99s %99s", var, val) > 1)
+					    mem_set_value(var, val);
+				}
+				linesRead++;
 			}
-
-			shellmemory[j].var = strdup(filename);
-			shellmemory[j].value = strndup(line, strlen(line));
-			free(line);
-		
-        }
-    }
-
-	loadtoframe(i, filename);
+		}
+	}
 
 	//no space left to load the entire file into shell memory
 	if(!feof(fp)){
 		error_code = 21;
 		//clean up the file in memory
-		for(int j = 1; i <= SHELL_MEM_LENGTH; i ++){
-			frame_store[j].var = "none";
-			frame_store[j].value = "none";
+		for(int j = i; j <= 300; j++){
+			shellmemory[j].var = "none";
+			shellmemory[j].value = "none";
     	}
 		return error_code;
 	}
-	//printShellMemory();
+	
+	printShellMemory();
     return error_code;
 
 }

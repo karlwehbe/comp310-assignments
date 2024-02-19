@@ -146,12 +146,10 @@ int interpreter(char* command_args[], int args_size){
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		printShellMemory();
 		return 1;
-	} else if (strcmp(command_args[0], "printfm")==0) {
-		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
-		printFrameMemory();
-		return 1;
 	}
+	
 	return handle_error(BAD_COMMAND);
+	
 }
 
 int help(){
@@ -297,7 +295,7 @@ int exec(char *fname1, char *fname2, char *fname3) {
 }
 
 int resetmem() {
-	for (int i = 0; i < 1000; i++) {
+	for (int i = 600; i < 1000; i++) {
 		if (strcmp(mem_get_value_at_line(i), "none") != 0) {
 			mem_set_value(getvariable(i), "none");
 		}

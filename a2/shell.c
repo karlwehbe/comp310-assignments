@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 	
 	//init shell memory
 	mem_init();
-    framestore_init();
+   
 
 	while(1) {						
         if (isatty(fileno(stdin))) printf("%c ",prompt);
@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
 		char *str = fgets(userInput, MAX_USER_INPUT-1, stdin);
         if (feof(stdin)){
             freopen("/dev/tty", "r", stdin);
+            printf("lolds");
         }
 
 		if(strlen(userInput) > 0) {
