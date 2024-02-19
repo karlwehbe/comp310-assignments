@@ -38,7 +38,7 @@ void loadtoframe(int i, char* filename) {
 		linesRead = 0;
 	
 		while (j < FRAMESTORE_SIZE && linesRead < 3 && fgets(line, 20, fp) != NULL) {
-			printf("%i", linesRead);
+			printf("%i\n", linesRead);
 			
 			line[strcspn(line, "\n")] = 0;
 			printf("line is : %s \n", line);	
