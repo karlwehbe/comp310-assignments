@@ -164,14 +164,16 @@ int quit(){
 	ready_queue_destory();
 
     if (chdir("/code") == 0) {	
-		if (chdir("backingstore") != 0) {
-				exit(0);
-		} else {
-			system("rm -r backingstore");		
-		}
+		if (chdir("backingstore") == 0) {
+			chdir("..");
+			system("rm -r backingstore");	
+		} 
 	} else {	
 		chdir("..");									
-		system("rm -r backingstore");		
+		if (chdir("backingstore") == 0) {
+				chdir("..");
+				system("rm -r backingstore");	
+		} 
 	}
 
 	exit(0);
