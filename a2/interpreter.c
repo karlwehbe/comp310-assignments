@@ -163,8 +163,12 @@ int quit(){
 	printf("%s\n", "Bye!");
 	ready_queue_destory();
 
-    if (chdir("/code") == 0) {			// changes to main directory /code
-		system("rm -r backingstore");		
+    if (chdir("/code") == 0) {	
+		if (chdir("backingstore") != 0) {
+				exit(0);
+		} else {
+			system("rm -r backingstore");		
+		}
 	} else {	
 		chdir("..");									
 		system("rm -r backingstore");		
