@@ -45,7 +45,7 @@ int my_touch(char* filename);
 int my_cd(char* dirname);
 int exec(char *fname1, char *fname2, char *fname3); //, char* policy, bool background, bool mt);
 int resetmem();
-//char* loadtobs(char* filename);
+char* loadtobs(char* filename);
 int fileExists(char* path);
 
 // Interpret commands and their arguments
@@ -142,7 +142,7 @@ int interpreter(char* command_args[], int args_size){
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		return resetmem();
 
-	}
+	} 
 	return handle_error(BAD_COMMAND);
 	
 }
@@ -250,7 +250,7 @@ int run(char* script){
 	//errCode 11: bad command file does not exist
 	int errCode = 0;
 	//load script into shell
-	//char* filename1 = loadtobs(script);
+	char* filename1 = loadtobs(script);
     errCode = process_initialize(script);
 	if(errCode == 11){
 		return handle_error(errCode);
@@ -265,24 +265,24 @@ int exec(char *fname1, char *fname2, char *fname3) {
 	
 	int error_code = 0;
 	if(fname1 != NULL){
-		//char* filename1 = loadtobs(fname1);
-        error_code = process_initialize(fname1);
+		char* filename1 = loadtobs(fname1);
+        error_code = process_initialize(filename1);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
     } 
 	
 	if(fname2 != NULL){
-		//char* filename2 = loadtobs(fname2);
-        error_code = process_initialize(fname2);
+		char* filename2 = loadtobs(fname2);
+        error_code = process_initialize(filename2);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}	
     }
 
     if(fname3 != NULL){
-		//char* filename3 = loadtobs(fname3);
-        error_code = process_initialize(fname3);
+		char* filename3 = loadtobs(fname3);
+        error_code = process_initialize(filename3);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
@@ -296,16 +296,17 @@ int exec(char *fname1, char *fname2, char *fname3) {
 }
 
 int resetmem() {
-	for (int i = 600; i < 1000; i++) {
+	for (int i = 300; i < 1000; i++) {
 		if (strcmp(mem_get_value_at_line(i), "none") != 0) {
 			mem_set_value(getvariable(i), "none");
 		}
 		resetvariable(i);	
 	}
-   return 1;
+	//printShellMemory();
+    return 1;
 }
 
-/*char* loadtobs(char* filename) {
+char* loadtobs(char* filename) {
 	char uniqueFilename[100];
     char path[100];
     int uniqueId = 1; // Start with 1 to append to the filename
@@ -334,7 +335,7 @@ int resetmem() {
 	snprintf(scriptpath, scriptsize, "/code/backingstore/%s", uniqueFilename);
 
 	return scriptpath;
-}*/
+}
 
 int fileExists(char *path) {
     FILE *file = fopen(path, "r");
