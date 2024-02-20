@@ -142,12 +142,7 @@ int interpreter(char* command_args[], int args_size){
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		return resetmem();
 
-	} else if (strcmp(command_args[0], "printsm")==0) {
-		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
-		printShellMemory();
-		return 1;
 	}
-	
 	return handle_error(BAD_COMMAND);
 	
 }
@@ -261,6 +256,7 @@ int run(char* script){
 
 
 int exec(char *fname1, char *fname2, char *fname3) {
+	
 	int error_code = 0;
 	if(fname1 != NULL){
 		char* filename1 = loadtobs(fname1);
@@ -268,7 +264,6 @@ int exec(char *fname1, char *fname2, char *fname3) {
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
-		
     } 
 	
 	if(fname2 != NULL){
@@ -331,7 +326,7 @@ char* loadtobs(char* filename) {
 		return NULL; // Ensure memory allocation success
 	}
 	snprintf(scriptpath, scriptsize, "/code/backingstore/%s", uniqueFilename);
-    
+
 	return scriptpath;
 }
 
