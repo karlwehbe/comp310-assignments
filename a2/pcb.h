@@ -13,9 +13,7 @@
 
 typedef struct PAGE PAGE;
 struct PAGE {
-    int index[3];
-    int valid_bots[3];
-    int page_index;
+    int frame_number;
     int page_id;
 };
 typedef struct
