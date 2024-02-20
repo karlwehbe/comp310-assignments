@@ -45,7 +45,7 @@ int my_touch(char* filename);
 int my_cd(char* dirname);
 int exec(char *fname1, char *fname2, char *fname3); //, char* policy, bool background, bool mt);
 int resetmem();
-char* loadtobs(char* filename);
+//char* loadtobs(char* filename);
 int fileExists(char* path);
 
 // Interpret commands and their arguments
@@ -250,8 +250,8 @@ int run(char* script){
 	//errCode 11: bad command file does not exist
 	int errCode = 0;
 	//load script into shell
-	char* filename1 = loadtobs(script);
-    errCode = process_initialize(filename1);
+	//char* filename1 = loadtobs(script);
+    errCode = process_initialize(script);
 	if(errCode == 11){
 		return handle_error(errCode);
 	}
@@ -265,24 +265,24 @@ int exec(char *fname1, char *fname2, char *fname3) {
 	
 	int error_code = 0;
 	if(fname1 != NULL){
-		char* filename1 = loadtobs(fname1);
-        error_code = process_initialize(filename1);
+		//char* filename1 = loadtobs(fname1);
+        error_code = process_initialize(fname1);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
     } 
 	
 	if(fname2 != NULL){
-		char* filename2 = loadtobs(fname2);
-        error_code = process_initialize(filename2);
+		//char* filename2 = loadtobs(fname2);
+        error_code = process_initialize(fname2);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}	
     }
 
     if(fname3 != NULL){
-		char* filename3 = loadtobs(fname3);
-        error_code = process_initialize(filename3);
+		//char* filename3 = loadtobs(fname3);
+        error_code = process_initialize(fname3);
 		if(error_code != 0){
 			return handle_error(error_code);
 		}
@@ -305,7 +305,7 @@ int resetmem() {
    return 1;
 }
 
-char* loadtobs(char* filename) {
+/*char* loadtobs(char* filename) {
 	char uniqueFilename[100];
     char path[100];
     int uniqueId = 1; // Start with 1 to append to the filename
@@ -334,7 +334,7 @@ char* loadtobs(char* filename) {
 	snprintf(scriptpath, scriptsize, "/code/backingstore/%s", uniqueFilename);
 
 	return scriptpath;
-}
+}*/
 
 int fileExists(char *path) {
     FILE *file = fopen(path, "r");

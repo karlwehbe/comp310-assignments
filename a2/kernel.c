@@ -30,11 +30,12 @@ int process_initialize(char *filename){
         fclose(fp);
         return FILE_ERROR;
     }
-    PCB* newPCB = makePCB(*start,*end);
-    QueueNode *node = malloc(sizeof(QueueNode));
-    node->pcb = newPCB;
-
-    ready_queue_add_to_tail(node);    
+    if (*end != 0) {
+        PCB* newPCB = makePCB(*start,*end);
+        QueueNode *node = malloc(sizeof(QueueNode));
+        node->pcb = newPCB;
+        ready_queue_add_to_tail(node);    
+    }
   
     return 0;
 
