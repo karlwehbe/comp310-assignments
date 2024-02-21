@@ -8,6 +8,7 @@
 #include "kernel.h"
 #include "shell.h"
 
+
 int MAX_USER_INPUT = 1000;
 int parseInput(char ui[]);
 
@@ -21,11 +22,13 @@ int main(int argc, char *argv[]) {
     }
     system("mkdir backingstore");
   
-
+    int fsize = FRAMESIZE;
+    int memsize = VARMEMSIZE;
 	printf("%s\n", "Shell v2.0\n");
-
-	char prompt = '$';  				// Shell prompt
-	char userInput[MAX_USER_INPUT];		// user's input stored here
+    printf("Frame Store Size = %i; Variable Store Size = %i\n", fsize, memsize);	
+    
+    char prompt = '$';  				// Shell prompt
+    char userInput[MAX_USER_INPUT];		// user's input stored here
 	int errorCode = 0;					// zero means no error, default
 
 	//init user input
