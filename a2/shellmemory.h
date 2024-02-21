@@ -9,4 +9,5 @@ void mem_free_lines_between(int start, int end);
 void printShellMemory();
 char *getvariable(int index);
 void *resetvariable(int index);
+void frame_set_value(char *var_in, char *value_in);
 #endif

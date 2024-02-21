@@ -26,34 +26,23 @@ PCB* makePCB(int start, int end){
     PAGE page_table[100];
 
     int newstart = start;
-    int newend = end +1 ;
+    int newend = end;
 
-    if (newend % 3 != 0) {
-        while (newend % 3 != 0){
-            newend++;
-        }
-    }
-
+   
     int i = 0;
-    while(newend != newstart) {
+    while(newend >= newstart) {
 
         if (start == 0 && newstart == start) {
             page_table[i].page_id = newPCB->pid;
             page_table[i].frame_number = 0;
-            //printf("End = %i and start = %i and frame# = %i and pID = %i\n", start+3, start, page_table[i].frame_number, page_table[i].page_id);
+            //printf("End1 = %i and start = %i and frame# = %i and pID = %i\n", start+2, start, page_table[i].frame_number, page_table[i].page_id);
             newstart+=3;
             i++;
         }
-        else if (newstart != newend) {
+        else if (newstart <= newend) {
             page_table[i].page_id = newPCB->pid;
             page_table[i].frame_number = newstart/3;
-            //printf("End = %i and start = %i and frame# = %i and pID = %i\n", newstart+3, newstart, page_table[i].frame_number, page_table[i].page_id);
-            i++;
-            newstart+=3;
-        } else if (newend == newstart) {
-            page_table[i].page_id = newPCB->pid;
-            page_table[i].frame_number = newstart/3;
-            //printf("End = %i and start = %i and frame# = %i and pID = %i\n", newstart+3, newstart, page_table[i].frame_number, page_table[i].page_id);
+            //printf("End2 = %i and start = %i and frame# = %i and pID = %i\n", newstart+2, newstart, page_table[i].frame_number, page_table[i].page_id);
             i++;
             newstart+=3;
         }

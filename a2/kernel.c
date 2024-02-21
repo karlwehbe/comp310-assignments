@@ -19,13 +19,20 @@ int process_initialize(char *filename){
     FILE* fp;
     int* start = (int*)malloc(sizeof(int));
     int* end = (int*)malloc(sizeof(int));
+   
     
     fp = fopen(filename, "rt");
     if(fp == NULL){
 		return FILE_DOES_NOT_EXIST;
     }
+    
     int error_code = load_file(fp, start, end, filename);
     
+    int diff = *end - *start;
+    if (diff > 2) {
+        *end = *end -1;
+    }
+
     if(error_code != 0){
         fclose(fp);
         return FILE_ERROR;

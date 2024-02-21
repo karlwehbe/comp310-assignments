@@ -66,7 +66,26 @@ void mem_set_value(char *var_in, char *value_in) {
 	}
 
 	return;
+}
 
+void frame_set_value(char *var_in, char *value_in) {
+	int i;
+	for (i=0; i<300; i++){
+		if (strcmp(shellmemory[i].var, var_in) == 0){
+			shellmemory[i].value = strdup(value_in);
+			return;
+		} 
+	}
+
+	//Value does not exist, need to find a free spot.
+	for (i=0; i<300; i++){
+		if (strcmp(shellmemory[i].var, "none") == 0){
+			shellmemory[i].var = strdup(var_in);
+			shellmemory[i].value = strdup(value_in);
+			return;
+		} 
+	}
+	return;
 }
 
 //get value based on input key
@@ -113,8 +132,7 @@ void printShellMemory(){
  * 
  * returns: error code, 21: no space left
  */
-int load_file(FILE* fp, int* pStart, int* pEnd, char* filename)
-{
+int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 	char *line;
     size_t i;
     int error_code = 0;
@@ -155,23 +173,24 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename)
 	} 
 
     for (size_t j = i; j < 300; j++){
-        if(feof(fp))
-        {
+        if (feof(fp))
+        {	
             *pEnd = (int)j-1;
             break;
         }else{	
+
 			char *value;
 			line = calloc(1, SHELL_MEM_LENGTH);
-			if (fgets(line, SHELL_MEM_LENGTH, fp) == NULL)
+			if (fgets(line, SHELL_MEM_LENGTH, fp) == NULL) 
 			{
 				continue;
 			}
 			shellmemory[j].var = strdup(filename);
-            shellmemory[j].value = strndup(line, strlen(line));
+			shellmemory[j].value = strndup(line, strlen(line));
 			if (strncmp(line, "set ", 4) == 0) {
 					char val[100], var[100];
 					if (sscanf(line, "set %99s %99s", var, val) > 1)
-					    mem_set_value(var, val);
+						mem_set_value(var, val);
 			}
 			free(line);
         }
@@ -188,7 +207,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename)
 		return error_code;
 	}
 	
-	//printShellMemory();
+	printShellMemory();
     return error_code;
 }
 
@@ -221,3 +240,5 @@ void *resetvariable(int index) {
 		shellmemory[index].var = "none";
 	}
 }
+
+
