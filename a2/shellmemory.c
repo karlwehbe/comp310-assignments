@@ -207,7 +207,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 		return error_code;
 	}
 	
-	printShellMemory();
+	//printShellMemory();
     return error_code;
 }
 
