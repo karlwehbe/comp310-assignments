@@ -8,6 +8,13 @@
 #include "kernel.h"
 #include "shell.h"
 
+#ifndef FRAMESIZE
+#define FRAMESIZE 300  
+#endif
+
+#ifndef VARMEMSIZE
+#define VARMEMSIZE 700 
+#endif
 
 int MAX_USER_INPUT = 1000;
 int parseInput(char ui[]);
