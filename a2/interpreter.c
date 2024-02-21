@@ -307,32 +307,34 @@ int resetmem() {
 }
 
 char* loadtobs(char* filename) {
+	// FIX LOAD TO BS
+	// cpy and move commands dont work.
 	char uniqueFilename[100];
     char path[100];
     int uniqueId = 1; // Start with 1 to append to the filename
 
     snprintf(uniqueFilename, sizeof(uniqueFilename), "%s_%d", filename, uniqueId);
-    snprintf(path, sizeof(path), "/code/backingstore/%s", uniqueFilename);
+    snprintf(path, sizeof(path), "backingstore/%s", uniqueFilename);
 
      while (fileExists(path)) {
         snprintf(uniqueFilename, sizeof(uniqueFilename), "%s_%d", filename, ++uniqueId);
-        snprintf(path, sizeof(path), "/code/backingstore/%s", uniqueFilename);
+        snprintf(path, sizeof(path), "backingstore/%s", uniqueFilename);
     }
 
     char copyCommand[100];
-    snprintf(copyCommand, sizeof(copyCommand),"cp /code/%s /code/backingstore \n", filename); 
+    snprintf(copyCommand, sizeof(copyCommand),"cp %s backingstore \n", filename); 
     system(copyCommand);
 
     char moveCommand[100];
-    snprintf(moveCommand, sizeof(moveCommand), "mv /code/backingstore/%s %s", filename, path);
+    snprintf(moveCommand, sizeof(moveCommand), "mv backingstore/%s %s", filename, path);
     system(moveCommand);
 
-    size_t scriptsize = strlen("/code/backingstore/") + strlen(uniqueFilename) + 1; // +1 for null terminator only
+    size_t scriptsize = strlen("backingstore/") + strlen(uniqueFilename) + 1; 
 	char* scriptpath = malloc(scriptsize);
 	if (scriptpath == NULL) {
-		return NULL; // Ensure memory allocation success
+		return NULL; 
 	}
-	snprintf(scriptpath, scriptsize, "/code/backingstore/%s", uniqueFilename);
+	snprintf(scriptpath, scriptsize, "backingstore/%s", uniqueFilename);
 
 	return scriptpath;
 }
