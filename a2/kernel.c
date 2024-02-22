@@ -15,11 +15,12 @@ bool active = false;
 bool debug = false;
 bool in_background = false;
 
+
+
 int process_initialize(char *filename){
     FILE* fp;
     int* start = (int*)malloc(sizeof(int));
     int* end = (int*)malloc(sizeof(int));
-   
     
     fp = fopen(filename, "rt");
     if(fp == NULL){
@@ -27,23 +28,21 @@ int process_initialize(char *filename){
     }
     
     int error_code = load_file(fp, start, end, filename);
-    
-    int diff = *end - *start;
-    if (diff > 2) {
-        *end = *end -1;
-    }
 
-    if(error_code != 0){
+    //printf("\nFilename = %s and start = %i and end = %i\n\n", filename, *start, *end);
+     if(error_code != 0){
         fclose(fp);
         return FILE_ERROR;
     }
+
     if (*end != 0) {
         PCB* newPCB = makePCB(*start,*end);
         QueueNode *node = malloc(sizeof(QueueNode));
+        PAGE table = newPCB->page_table;
         node->pcb = newPCB;
         ready_queue_add_to_tail(node);    
+
     }
-  
     return 0;
 
 }
@@ -72,13 +71,14 @@ int shell_process_initialize(){
 bool execute_process(QueueNode *node, int quanta){
     char *line = NULL;
     PCB *pcb = node->pcb;
-    for(int i=0; i<quanta; i++){
+    
+    for(int i=0; i<quanta ; i++){
         line = mem_get_value_at_line(pcb->PC++);
         in_background = true;
         if(pcb->priority) {
             pcb->priority = false;
         }
-        if(pcb->PC>pcb->end){
+        if(pcb->PC>pcb->end ){
             parseInput(line);
             terminate_process(node);
             in_background = false;

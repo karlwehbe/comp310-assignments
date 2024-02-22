@@ -6,6 +6,7 @@
 
 int pid_counter = 1;
 
+
 int generatePID(){
     return pid_counter++;
 }
@@ -20,34 +21,40 @@ PCB* makePCB(int start, int end){
     newPCB->end = end;
     newPCB->job_length_score = 1+end-start;
     newPCB->priority = false;
-   
+    newPCB->page_table = generatePageTable(start, end, pid_counter);   
 
+    return newPCB;
+
+}
+
+PAGE generatePageTable(int start, int end, int pid) {
 
     PAGE page_table[100];
 
     int newstart = start;
-    int newend = end;
 
-   
-    int i = 0;
-    while(newend >= newstart) {
+    int i = 0 ;
+    while(end >= newstart) {
 
         if (start == 0 && newstart == start) {
-            page_table[i].page_id = newPCB->pid;
+            page_table[i].pageid = pid;
             page_table[i].frame_number = 0;
-            //printf("End1 = %i and start = %i and frame# = %i and pID = %i\n", start+2, start, page_table[i].frame_number, page_table[i].page_id);
+            page_table[i].start = 0;
+            page_table[i].end = start+2;
+            //printf("Starts at = %i and ends at = %i and frame# = %i and pID = %i\n", page_table[i].start, page_table[i].end, page_table[i].frame_number, page_table[i].pageid);
             newstart+=3;
             i++;
-        }
-        else if (newstart <= newend) {
-            page_table[i].page_id = newPCB->pid;
-            page_table[i].frame_number = newstart/3;
-            //printf("End2 = %i and start = %i and frame# = %i and pID = %i\n", newstart+2, newstart, page_table[i].frame_number, page_table[i].page_id);
-            i++;
-            newstart+=3;
-        }
-        
-    }
 
-    return newPCB;
+        } else if (newstart <= end) {
+            page_table[i].pageid = pid;
+            page_table[i].frame_number = i;
+            page_table[i].start = newstart;
+            page_table[i].end = newstart+2 ;
+            //printf("Starts at = %i and ends at = %i and frame# = %i and pID = %i\n", page_table[i].start, page_table[i].end, page_table[i].frame_number, page_table[i].pageid);
+            i++;
+            newstart+=3;
+        }
+    }
+    
+    return *page_table;   
 }

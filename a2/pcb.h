@@ -14,7 +14,9 @@
 typedef struct PAGE PAGE;
 struct PAGE {
     int frame_number;
-    int page_id;
+    int pageid;
+    int start;
+    int end;
 };
 typedef struct
 {
@@ -24,8 +26,12 @@ typedef struct
     int start;
     int end;
     int job_length_score;
+    int framenumber; 
+    PAGE page_table;
+    
 }PCB;
 
 int generatePID();
 PCB * makePCB(int start, int end);
+PAGE generatePageTable(int start, int end, int pid);
 #endif
