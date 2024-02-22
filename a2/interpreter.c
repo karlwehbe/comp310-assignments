@@ -47,6 +47,7 @@ int exec(char *fname1, char *fname2, char *fname3); //, char* policy, bool backg
 int resetmem();
 char* loadtobs(char* filename);
 int fileExists(char* path);
+char* load_page(char *filename, int *lastPosition);
 
 
 
@@ -255,14 +256,28 @@ int my_cd(char* dirname){
 int run(char* script){
 	//errCode 11: bad command file does not exist
 	int errCode = 0;
-	//load script into shell
 	if (script != NULL) {
+		int lastPosition = 0; 
+		FILE* file = fopen(script, "r");
+
+		fseek(file, 0, SEEK_END);
+		long fileSize = ftell(file);
+		fclose(file);
+
 		char* filename = loadtobs(script); 
-		errCode = process_initialize(filename);
+		while (lastPosition < fileSize) {
+			char* page ;
+			page = load_page(filename, &lastPosition);
+			if (page == NULL) {
+				break; 
+			}
+			errCode = process_initialize(page);
 			if (errCode != 0) {
 				return handle_error(errCode);
 			}
-	}
+		}
+    }
+
 	//run with FCFS
 	schedule_by_policy("FCFS"); //, false);
 	return errCode;
@@ -275,12 +290,25 @@ int exec(char *fname1, char *fname2, char *fname3) {
     char* filenames[] = {fname1, fname2, fname3};
     for (int i = 0; i < 3; i++) {
         if (filenames[i] != NULL) {
+            int lastPosition = 0; 
+            FILE* file = fopen(filenames[i], "r");
+
+            fseek(file, 0, SEEK_END);
+            long fileSize = ftell(file);
+            fclose(file);
 
             char* filename = loadtobs(filenames[i]); 
-			error_code = process_initialize(filename);
-			if (error_code != 0) {
-				return handle_error(error_code);
-			}
+            while (lastPosition < fileSize) {
+                char* page ;
+				page = load_page(filename, &lastPosition);
+                if (page == NULL) {
+                    break; 
+                }
+				error_code = process_initialize(page);
+            	if (error_code != 0) {
+                	return handle_error(error_code);
+                }
+            }
         }
     }
 
@@ -346,7 +374,39 @@ int fileExists(char *path) {
 }
 
 
+char* load_page(char *filename, int *lastPosition) {
 
+    FILE* fp = fopen(filename, "rt");
+
+    fseek(fp, *lastPosition, SEEK_SET);
+
+    char pageFilename[100];
+    snprintf(pageFilename, sizeof(pageFilename), "%s_page_at_%ld.txt", filename, *lastPosition);
+
+	FILE* pageFile = fopen(pageFilename, "wt");
+
+    char line[100];
+    int linesRead = 0;
+
+    while (linesRead < 3 && fgets(line, sizeof(line), fp) != NULL) {
+		fputs(line, pageFile);
+		linesRead++;
+    }
+
+    // Update the last read position for the next call
+    *lastPosition = ftell(fp);
+
+    fclose(fp);
+    fclose(pageFile);
+
+    // Dynamically allocate memory for the page filename to return
+    char* dynamicPageFilename = malloc(strlen(pageFilename) + 1);
+    if (!dynamicPageFilename) {
+        return NULL;
+    }
+    strcpy(dynamicPageFilename, pageFilename);
+    return dynamicPageFilename;
+}
 
 
 	

@@ -29,19 +29,41 @@ int process_initialize(char *filename){
     
     int error_code = load_file(fp, start, end, filename);
 
-    //printf("\nFilename = %s and start = %i and end = %i\n\n", filename, *start, *end);
+    //printf("\nFilename = %s and start = %i and end = %i\n", filename, *start, *end);
      if(error_code != 0){
         fclose(fp);
         return FILE_ERROR;
     }
 
-    if (*end != 0) {
+    int diff = *end - *start; 
+    if (diff > 2) {
+        *end = *end - 1;
+    }
+
+    int fnumber = (*end - *start)/3;
+    int newend = 0;
+
+    newend = *end;
+
+    for (int i = 0; i <= fnumber; i++) {
+        
+        if (i == 0){
+            if (fnumber > 0) {
+                *end = *start+2;
+            }
+        } else if (i < fnumber) {
+            *start+=3; 
+            *end = *start+2;
+        } else if (i == fnumber) {
+            *start+=3; 
+            *end = newend;
+        }
+        
+        //printf("Start = %i and end = %i\n", *start, *end);
         PCB* newPCB = makePCB(*start,*end);
         QueueNode *node = malloc(sizeof(QueueNode));
-        PAGE table = newPCB->page_table;
         node->pcb = newPCB;
         ready_queue_add_to_tail(node);    
-
     }
     return 0;
 

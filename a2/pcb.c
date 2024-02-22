@@ -22,9 +22,25 @@ PCB* makePCB(int start, int end){
     newPCB->job_length_score = 1+end-start;
     newPCB->priority = false;
     newPCB->page_table = generatePageTable(start, end, pid_counter);   
+    newPCB->pt = genpt(start, end);
 
     return newPCB;
 
+}
+
+int genpt(int start, int end) {
+    int pagetable[100];
+
+    int newstart = start;
+
+    while(end >= newstart) {
+        pagetable[i] = newstart/3;
+        //printf("Index = %i, frame# %i, and starts at line %i\n", i, pagetable[i], 3*pagetable[i]);
+        i++;
+        newstart+=3;
+    } 
+
+    return *pagetable;
 }
 
 PAGE generatePageTable(int start, int end, int pid) {
