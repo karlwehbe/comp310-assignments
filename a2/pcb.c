@@ -30,9 +30,9 @@ PCB* makePCB(int start, int end){
 
 int genpt(int start, int end) {
     int pagetable[100];
-
     int newstart = start;
-
+    int i = 0;
+    
     while(end >= newstart) {
         pagetable[i] = newstart/3;
         //printf("Index = %i, frame# %i, and starts at line %i\n", i, pagetable[i], 3*pagetable[i]);
