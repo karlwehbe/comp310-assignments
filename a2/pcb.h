@@ -27,13 +27,11 @@ typedef struct
     int end;
     int job_length_score;
     int framenumber; 
-    PAGE page_table;
-    int pt ;
+    PAGE pt ;
     
 }PCB;
 
 int generatePID();
 PCB * makePCB(int start, int end);
-PAGE generatePageTable(int start, int end, int pid);
-int genpt(int start, int end);
+PAGE genpt(int start, int end, int pid);
 #endif
