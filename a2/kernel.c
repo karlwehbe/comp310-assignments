@@ -23,6 +23,7 @@ int process_initialize(char *filename){
     int* end = (int*)malloc(sizeof(int));
     
     fp = fopen(filename, "rt");
+
     if(fp == NULL){
 		return FILE_DOES_NOT_EXIST;
     }
@@ -75,7 +76,8 @@ bool execute_process(QueueNode *node, int quanta){
     PCB *pcb = node->pcb;
     
     for(int i=0; i<quanta ; i++){
-        line = mem_get_value_at_line(pcb->PC++);
+        line = mem_get_value_at_line(pcb->pt.start++);
+        pcb->PC++;
         in_background = true;
         if(pcb->priority) {
             pcb->priority = false;

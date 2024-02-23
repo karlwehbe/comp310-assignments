@@ -25,8 +25,7 @@ typedef struct
     int PC;
     int start;
     int end;
-    int job_length_score;
-    int framenumber; 
+    int job_length_score; 
     PAGE pt ;
     
 }PCB;

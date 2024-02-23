@@ -257,6 +257,10 @@ int run(char* script){
 	//errCode 11: bad command file does not exist
 	int errCode = 0;
 	if (script != NULL) {
+		if (!fileExists(script)) {
+			errCode = 2;
+			return handle_error(errCode);
+		}
 		char* filename = loadtobs(script); 
 		errCode = process_initialize(filename);
 		if (errCode != 0) {
@@ -276,6 +280,11 @@ int exec(char *fname1, char *fname2, char *fname3) {
     char* filenames[] = {fname1, fname2, fname3};
     for (int i = 0; i < 3; i++) {
         if (filenames[i] != NULL) {
+
+			if (!fileExists(filenames[i])) {
+				error_code = 2;
+				return handle_error(error_code);
+			}
           /*  int lastPosition = 0; 
             FILE* file = fopen(filenames[i], "r");
 
@@ -317,8 +326,8 @@ int resetmem() {
 }
 
 char* loadtobs(char* filename) {
-	// FIX LOAD TO BS
-	// cpy and move commands dont work.
+	
+
 	char uniqueFilename[100];
     char path[100];
     int uniqueId = 1; // Start with 1 to append to the filename

@@ -28,7 +28,7 @@ PCB* makePCB(int start, int end){
 }
 
 PAGE genpt(int start, int end, int pid) {
-    PAGE pagetable[100];
+    PAGE pagetable[100] ;
     int newstart = start;
     int i = 0;
     
