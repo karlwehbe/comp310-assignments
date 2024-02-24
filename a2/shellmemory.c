@@ -5,6 +5,8 @@
 
 #define SHELL_MEM_LENGTH 1000
 
+void mem_free_lines_between(int start, int end);
+char * mem_get_value_at_line(int index);
 
 struct memory_struct{
 	char *var;
@@ -159,12 +161,18 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 	}
 	i = candidate;
 	//shell memory is full
+	int newstart = 0;
 	if(hasSpaceLeft == 0){
-		error_code = 21;
-		return error_code;
-	}
-   
-
+        printf("Page fault! Victim page contents:\n");
+        for (int i = newstart; i < 3; i++) {
+            printf(mem_get_value_at_line(i));
+        }
+        mem_free_lines_between(i, i+2);
+        printf("End of victim page contents.\n");
+		i = newstart;
+    }
+       
+	   
 	if (i % 3 != 0) {
 		while(i % 3 != 0) {
 			i++;
@@ -172,32 +180,39 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 		*pStart = (int)i;
 	} 
 
-    for (size_t j = i; j < 300; j++){
-        if (feof(fp))
+	int linesRead;
+
+	int maxlines = 6;
+	
+    for (size_t j = i; (j < 300); j++){
+        if (feof(fp) || linesRead == maxlines)
         {	
             *pEnd = (int)j-1;
             break;
         }else{	
-
 			char *value;
 			line = calloc(1, SHELL_MEM_LENGTH);
 			if (fgets(line, SHELL_MEM_LENGTH, fp) == NULL) 
+			
 			{
+				linesRead++;
 				continue;
 			}
 			shellmemory[j].var = strdup(filename);
 			shellmemory[j].value = strndup(line, strlen(line));
+			linesRead++;
 			if (strncmp(line, "set ", 4) == 0) {
-					char val[100], var[100];
-					if (sscanf(line, "set %99s %99s", var, val) > 1)
-						mem_set_value(var, val);
+				char val[100], var[100];
+				if (sscanf(line, "set %99s %99s", var, val) > 1)
+					mem_set_value(var, val);
 			}
 			free(line);
+			
         }
     }
 
 	//no space left to load the entire file into shell memory
-	if(!feof(fp)){
+	if(!feof(fp) && linesRead < 6){
 		error_code = 21;
 		//clean up the file in memory
 		for(int j = 1; i <= SHELL_MEM_LENGTH; i ++){
@@ -207,7 +222,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 		return error_code;
 	}
 	
-	//printShellMemory();
+	printShellMemory();
     return error_code;
 }
 
@@ -241,4 +256,66 @@ void *resetvariable(int index) {
 	}
 }
 
+int exists(char* variable) {
+	for (int i = 0; i < 300; i++) {
+		if (strcmp(mem_get_value_at_line(i), variable) == 0) {
+			return i;
+		}
+	}
+	return -1;
 
+}
+
+/*int loadpage(FILE* fp, int* pStart, int* pEnd,  char* filename) { 
+
+	char *line;
+    size_t i;
+    int error_code = 0;
+	bool hasSpaceLeft = false;
+	bool flag = true;
+	i = 0;
+	size_t candidate;
+	
+	
+	if (i % 3 != 0) {
+		while(i % 3 != 0) {
+			i++;
+		}
+		*pStart = (int)i;
+	} 
+
+	int linesRead;
+
+	int maxlines = 3;
+	
+    for (size_t j = i; (j < 300); j++){
+        if (feof(fp) || linesRead == maxlines)
+        {	
+            *pEnd = (int)j-1;
+            break;
+        }else{	
+			char *value;
+			line = calloc(1, SHELL_MEM_LENGTH);
+			if (fgets(line, SHELL_MEM_LENGTH, fp) == NULL) 
+			
+			{
+				linesRead++;
+				continue;
+			}
+			shellmemory[j].var = strdup(filename);
+			shellmemory[j].value = strndup(line, strlen(line));
+			linesRead++;
+			if (strncmp(line, "set ", 4) == 0) {
+				char val[100], var[100];
+				if (sscanf(line, "set %99s %99s", var, val) > 1)
+					mem_set_value(var, val);
+			}
+			free(line);
+			
+        }
+    }
+
+    return error_code;
+
+}
+*/

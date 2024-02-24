@@ -10,4 +10,5 @@ void printShellMemory();
 char *getvariable(int index);
 void *resetvariable(int index);
 void frame_set_value(char *var_in, char *value_in);
+int exists(char* variable);
 #endif

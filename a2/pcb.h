@@ -17,7 +17,7 @@ struct PAGE {
     int pageid;
     int start;
     int end;
-    bool loaded;
+    int size;
 };
 typedef struct
 {

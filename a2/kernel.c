@@ -17,38 +17,6 @@ bool in_background = false;
 
 
 
-/*char* load_page(FILE* fp, char *filename, int *lastPosition) {
-
-
-    fseek(fp, *lastPosition, SEEK_SET);
-
-    char pageFilename[100];
-    snprintf(pageFilename, sizeof(pageFilename), "%s_page_at_%ld.txt", filename, *lastPosition);
-
-	FILE* pageFile = fopen(pageFilename, "wt");
-
-    char line[100];
-    int linesRead = 0;
-
-    while (linesRead < 3 && fgets(line, sizeof(line), fp) != NULL) {
-		fputs(line, pageFile);
-		linesRead++;
-    }
-
-    // Update the last read position for the next call
-    *lastPosition = ftell(fp);
-    fclose(pageFile);
-
-    // Dynamically allocate memory for the page filename to return
-    char* dynamicPageFilename = malloc(strlen(pageFilename) + 1);
-    if (!dynamicPageFilename) {
-        return NULL;
-    }
-    strcpy(dynamicPageFilename, pageFilename);
-    return dynamicPageFilename;
-}*/
-
-
 int process_initialize(char *filename){
     FILE* fp;
     int* start = (int*)malloc(sizeof(int));
@@ -60,38 +28,32 @@ int process_initialize(char *filename){
 		return FILE_DOES_NOT_EXIST;
     }
 
-    /*FILE* frame;
-
-    fseek(fp, 0, SEEK_END);
-    long fileSize = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    int lastPosition; 
-    char* framename;
-    
-    while (lastPosition < fileSize) {
-        for (int i = 0; i < 2; i++ ) {
-            framename = load_page(fp, filename, &lastPosition); 
-            frame = fopen(framename, "rt");
-*/
     int error_code = load_file(fp, start, end, filename);
+   
+    int pageend = *end;
 
+    FILE* file;
+    file = fopen(filename, "r");
+
+    int lines = 0;
+    char ch;
+    while(!feof(file)) {
+        ch = fgetc(file);
+        if(ch == '\n') {
+            lines++;
+        }
+    }
+    if (ch != '\n' && lines != 0) lines++;
+    fclose(file);
+
+    *end = *start + (lines-1) ;
+ 
     //printf("\nFilename = %s and start = %i and end = %i\n", filename, *start, *end);
     if(error_code != 0){
         fclose(fp);
         return FILE_ERROR;
     }
 
-    /*int diff = *end - *start; 
-    if (diff > 2) {
-        *end = *end - 1;
-    }*/
-
-    //fclose(frame);
-    //}
-    //}
-
-    // fseek to end of file to see where it ends.
-    //
     PCB* newPCB = makePCB(*start,*end);
     QueueNode *node = malloc(sizeof(QueueNode));
     node->pcb = newPCB;
@@ -122,25 +84,39 @@ int shell_process_initialize(){
     return 0;
 }
 
+
 bool execute_process(QueueNode *node, int quanta){
     char *line = NULL;
     PCB *pcb = node->pcb;
+    int end;
     
     for(int i=0; i<quanta ; i++){
-        line = mem_get_value_at_line(pcb->pt.start++);
-        pcb->PC++;
+        line = mem_get_value_at_line(pcb->PC++);
+
+
+        if (strcmp(line, "none") == 0) {
+            in_background = false;
+            return true;
+        }
+       
         in_background = true;
+
         if(pcb->priority) {
             pcb->priority = false;
         }
-        if(pcb->PC>pcb->end ){
+    
+        if(pcb->PC>pcb->end){
+            //printf("prior : %i, end : %i, pc : %i, start : %i, pcbptstart : %i, pcbptframe# : %i, pcbptsize : %i\n", pcb->priority, pcb->end, pcb->PC, pcb->start, pcb->pt.start, pcb->pt.frame_number, pcb->pt.size);
             parseInput(line);
             terminate_process(node);
             in_background = false;
             return true;
-        }
+    
+        } 
+        //printf("prior : %i, end : %i, pc : %i, start : %i, pcbptstart : %i, pcbptframe# : %i, pcbptsize : %i\n", pcb->priority, pcb->end, pcb->PC, pcb->start, pcb->pt.start, pcb->pt.frame_number, pcb->pt.size); 
         parseInput(line);
         in_background = false;
+
     }
     return false;
 }
