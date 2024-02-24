@@ -17,6 +17,38 @@ bool in_background = false;
 
 
 
+/*char* load_page(FILE* fp, char *filename, int *lastPosition) {
+
+
+    fseek(fp, *lastPosition, SEEK_SET);
+
+    char pageFilename[100];
+    snprintf(pageFilename, sizeof(pageFilename), "%s_page_at_%ld.txt", filename, *lastPosition);
+
+	FILE* pageFile = fopen(pageFilename, "wt");
+
+    char line[100];
+    int linesRead = 0;
+
+    while (linesRead < 3 && fgets(line, sizeof(line), fp) != NULL) {
+		fputs(line, pageFile);
+		linesRead++;
+    }
+
+    // Update the last read position for the next call
+    *lastPosition = ftell(fp);
+    fclose(pageFile);
+
+    // Dynamically allocate memory for the page filename to return
+    char* dynamicPageFilename = malloc(strlen(pageFilename) + 1);
+    if (!dynamicPageFilename) {
+        return NULL;
+    }
+    strcpy(dynamicPageFilename, pageFilename);
+    return dynamicPageFilename;
+}*/
+
+
 int process_initialize(char *filename){
     FILE* fp;
     int* start = (int*)malloc(sizeof(int));
@@ -27,11 +59,24 @@ int process_initialize(char *filename){
     if(fp == NULL){
 		return FILE_DOES_NOT_EXIST;
     }
+
+    /*FILE* frame;
+
+    fseek(fp, 0, SEEK_END);
+    long fileSize = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    int lastPosition; 
+    char* framename;
     
+    while (lastPosition < fileSize) {
+        for (int i = 0; i < 2; i++ ) {
+            framename = load_page(fp, filename, &lastPosition); 
+            frame = fopen(framename, "rt");
+*/
     int error_code = load_file(fp, start, end, filename);
 
-    printf("\nFilename = %s and start = %i and end = %i\n", filename, *start, *end);
-     if(error_code != 0){
+    //printf("\nFilename = %s and start = %i and end = %i\n", filename, *start, *end);
+    if(error_code != 0){
         fclose(fp);
         return FILE_ERROR;
     }
@@ -41,13 +86,19 @@ int process_initialize(char *filename){
         *end = *end - 1;
     }*/
 
+    //fclose(frame);
+    //}
+    //}
+
+    // fseek to end of file to see where it ends.
+    //
     PCB* newPCB = makePCB(*start,*end);
     QueueNode *node = malloc(sizeof(QueueNode));
     node->pcb = newPCB;
     ready_queue_add_to_tail(node);    
-
+    
     return 0;
-
+        
 }
 
 int shell_process_initialize(){

@@ -17,6 +17,7 @@ struct PAGE {
     int pageid;
     int start;
     int end;
+    bool loaded;
 };
 typedef struct
 {
@@ -26,8 +27,8 @@ typedef struct
     int start;
     int end;
     int job_length_score; 
-    PAGE pt ;
-    
+    PAGE pt; 
+
 }PCB;
 
 int generatePID();

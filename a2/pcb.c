@@ -28,9 +28,13 @@ PCB* makePCB(int start, int end){
 }
 
 PAGE genpt(int start, int end, int pid) {
-    PAGE pagetable[100] ;
+    PAGE pagetable[((end-start)/3)+1] ;
     int newstart = start;
     int i = 0;
+
+    for(int k = 0; k<(end-start/3)+1; k++) {
+        pagetable[i].loaded = false;
+    }
     
     while(end >= newstart) {
 
@@ -39,7 +43,8 @@ PAGE genpt(int start, int end, int pid) {
             pagetable[i].pageid = pid;
             pagetable[i].start = newstart;
             pagetable[i].end = newstart+2;
-            printf("PID of this frame is %i __________ specifics include : INDEX = %i, FRAME #%i, and STARTS at line %i and ENDS at line : %i\n", pagetable[i].pageid, i, pagetable[i].frame_number, pagetable[i].start, pagetable[i].end);
+            pagetable[i].loaded = true;
+            //printf("PID of this frame is %i __________ specifics include : INDEX = %i, FRAME #%i, and STARTS at line %i and ENDS at line %i and IS : %d\n", pagetable[i].pageid, i, pagetable[i].frame_number, pagetable[i].start, pagetable[i].end, pagetable[i].loaded);
             i++;
             newstart+=3;
         } else {
@@ -47,7 +52,8 @@ PAGE genpt(int start, int end, int pid) {
             pagetable[i].pageid = pid;
             pagetable[i].start = newstart;
             pagetable[i].end = end;
-            printf("PID of this frame is %i __________ specifics include : INDEX = %i, FRAME #%i, and STARTS at line %i and ENDS at line : %i\n", pagetable[i].pageid, i, pagetable[i].frame_number, pagetable[i].start, pagetable[i].end);
+            pagetable[i].loaded = true;
+            //printf("PID of this frame is %i __________ specifics include : INDEX = %i, FRAME #%i, and STARTS at line %i and ENDS at line %i and IS: %d \n", pagetable[i].pageid, i, pagetable[i].frame_number, pagetable[i].start, pagetable[i].end, pagetable[i].loaded);
             i++;
             newstart+=3;
 

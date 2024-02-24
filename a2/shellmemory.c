@@ -138,7 +138,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
     int error_code = 0;
 	bool hasSpaceLeft = false;
 	bool flag = true;
-	i=0;
+	i = 0;
 	size_t candidate;
 	while(flag){
 		flag = false;

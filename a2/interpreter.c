@@ -47,8 +47,6 @@ int exec(char *fname1, char *fname2, char *fname3); //, char* policy, bool backg
 int resetmem();
 char* loadtobs(char* filename);
 int fileExists(char* path);
-char* load_page(char *filename, int *lastPosition);
-
 
 
 // Interpret commands and their arguments
@@ -327,7 +325,6 @@ int resetmem() {
 
 char* loadtobs(char* filename) {
 	
-
 	char uniqueFilename[100];
     char path[100];
     int uniqueId = 1; // Start with 1 to append to the filename
@@ -358,6 +355,8 @@ char* loadtobs(char* filename) {
 	return scriptpath;
 }
 
+
+	
 int fileExists(char *path) {
     FILE *file = fopen(path, "r");
     if (file) {
@@ -366,43 +365,5 @@ int fileExists(char *path) {
     }
     return 0; 
 }
-
-
-char* load_page(char *filename, int *lastPosition) {
-
-    FILE* fp = fopen(filename, "rt");
-
-    fseek(fp, *lastPosition, SEEK_SET);
-
-    char pageFilename[100];
-    snprintf(pageFilename, sizeof(pageFilename), "%s_page_at_%ld.txt", filename, *lastPosition);
-
-	FILE* pageFile = fopen(pageFilename, "wt");
-
-    char line[100];
-    int linesRead = 0;
-
-    while (linesRead < 3 && fgets(line, sizeof(line), fp) != NULL) {
-		fputs(line, pageFile);
-		linesRead++;
-    }
-
-    // Update the last read position for the next call
-    *lastPosition = ftell(fp);
-
-    fclose(fp);
-    fclose(pageFile);
-
-    // Dynamically allocate memory for the page filename to return
-    char* dynamicPageFilename = malloc(strlen(pageFilename) + 1);
-    if (!dynamicPageFilename) {
-        return NULL;
-    }
-    strcpy(dynamicPageFilename, pageFilename);
-    return dynamicPageFilename;
-}
-
-
-	
 
 
