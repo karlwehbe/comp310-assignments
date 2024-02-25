@@ -18,6 +18,7 @@ struct PAGE {
     int start;
     int end;
     int size;
+    int loaded;
 };
 typedef struct
 {
@@ -28,10 +29,12 @@ typedef struct
     int end;
     int job_length_score; 
     PAGE pt; 
-
+    int endof_file;
+    int temp_size;
+    int full_size;
+    char* filename;
 }PCB;
 
 int generatePID();
-PCB * makePCB(int start, int end);
-PAGE genpt(int start, int end, int pid);
+PCB * makePCB(int start, int end, int accend, char* filename);
 #endif

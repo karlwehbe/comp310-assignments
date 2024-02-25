@@ -7,6 +7,9 @@
 
 void mem_free_lines_between(int start, int end);
 char * mem_get_value_at_line(int index);
+int memFull();
+void mem_set_line(char* filename, char* line, int index);
+int getIndex(char* line);
 
 struct memory_struct{
 	char *var;
@@ -266,56 +269,33 @@ int exists(char* variable) {
 
 }
 
-/*int loadpage(FILE* fp, int* pStart, int* pEnd,  char* filename) { 
-
-	char *line;
-    size_t i;
-    int error_code = 0;
-	bool hasSpaceLeft = false;
-	bool flag = true;
-	i = 0;
-	size_t candidate;
-	
-	
-	if (i % 3 != 0) {
-		while(i % 3 != 0) {
-			i++;
+int memFull() {
+	int i;
+	for (i = 0; i < 300; i+=3) {
+		if (strcmp(mem_get_value_at_line(i), "none") == 0 && 
+				strcmp(mem_get_value_at_line(i+1),"none") == 0 && 
+				strcmp(mem_get_value_at_line(i+2), "none") == 0) {
+			return i;
 		}
-		*pStart = (int)i;
-	} 
-
-	int linesRead;
-
-	int maxlines = 3;
-	
-    for (size_t j = i; (j < 300); j++){
-        if (feof(fp) || linesRead == maxlines)
-        {	
-            *pEnd = (int)j-1;
-            break;
-        }else{	
-			char *value;
-			line = calloc(1, SHELL_MEM_LENGTH);
-			if (fgets(line, SHELL_MEM_LENGTH, fp) == NULL) 
-			
-			{
-				linesRead++;
-				continue;
-			}
-			shellmemory[j].var = strdup(filename);
-			shellmemory[j].value = strndup(line, strlen(line));
-			linesRead++;
-			if (strncmp(line, "set ", 4) == 0) {
-				char val[100], var[100];
-				if (sscanf(line, "set %99s %99s", var, val) > 1)
-					mem_set_value(var, val);
-			}
-			free(line);
-			
-        }
-    }
-
-    return error_code;
-
+	}
+	return -1;	
 }
-*/
+
+void mem_set_line(char* filename, char* line, int index) {
+	for (int i = index; i < index+3; i++) {
+		if (strcmp(mem_get_value_at_line(i), "none") == 0) {
+			shellmemory[i].value = strndup(line, strlen(line));
+			shellmemory[i].var = filename;
+			break;
+		}
+	}
+	
+}
+
+int getIndex(char* line) {
+	for (int i = 0; i < 300 ; i++) {
+		if (strcmp(mem_get_value_at_line(i), line) == 0) {
+			return i;
+		}
+	}
+}

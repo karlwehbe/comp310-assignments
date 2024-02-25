@@ -15,7 +15,66 @@ bool active = false;
 bool debug = false;
 bool in_background = false;
 
+void load_page(int recentsize, int finalsize, QueueNode* node);
+int memFull();
+void mem_set_line(char* filename, char* line, int index);
+int getIndex(char* line);
 
+
+
+void load_page(int recentsize, int finalsize, QueueNode* node) {
+
+    char* filename;
+    filename = node->pcb->filename;
+
+    FILE* file = fopen(filename, "r");
+
+    char* line;
+    int lines_alr_read = recentsize * 3;
+    int lines_toread = (finalsize - recentsize) *3;
+
+    int linesread = 0;
+    int count = 0;
+    char ch;
+    int index;
+
+    while (!feof(file)) {
+        
+        line = calloc(1, 101);
+        if (fgets(line, 101, file) != NULL && count < 3) {
+            if (exists(line) != -1) {
+                linesread++;
+            }
+
+            if (linesread >= lines_alr_read && exists(line) == -1) {
+                if (memFull() == -1) {
+                    printf("Page fault! Victim page contents:\n");
+                    printf("result = %i", memFull());
+                    for (int i = 0; i < 3; i++) {
+                        printf("%s", mem_get_value_at_line(i));
+                    }
+                    printf("End of victim page contents.\n");
+                    mem_free_lines_between(0,2);
+                }
+                //printf("%i\n", memFull());
+                mem_set_line(filename, line, memFull());
+                count++;
+                linesread++;
+                index = getIndex(line);
+            }
+            free(line);
+        }
+    }
+    node->pcb->temp_size++;
+    node->pcb->end = node->pcb->end + count;
+
+    index = getIndex(line) - count + 1;
+
+    
+    
+    fclose(file);
+
+}
 
 int process_initialize(char *filename){
     FILE* fp;
@@ -46,7 +105,7 @@ int process_initialize(char *filename){
     if (ch != '\n' && lines != 0) lines++;
     fclose(file);
 
-    *end = *start + (lines-1) ;
+    int newend = *start + (lines-1) ;
  
     //printf("\nFilename = %s and start = %i and end = %i\n", filename, *start, *end);
     if(error_code != 0){
@@ -54,10 +113,10 @@ int process_initialize(char *filename){
         return FILE_ERROR;
     }
 
-    PCB* newPCB = makePCB(*start,*end);
+    PCB* newPCB = makePCB(*start,*end, newend, filename);
     QueueNode *node = malloc(sizeof(QueueNode));
     node->pcb = newPCB;
-    ready_queue_add_to_tail(node);    
+    ready_queue_add_to_tail(node);   
     
     return 0;
         
@@ -73,7 +132,7 @@ int shell_process_initialize(){
     if(error_code != 0){
         return error_code;
     }
-    PCB* newPCB = makePCB(*start,*end);
+    PCB* newPCB = makePCB(*start,*end, 0, "shell");
     newPCB->priority = true;
     QueueNode *node = malloc(sizeof(QueueNode));
     node->pcb = newPCB;
@@ -89,34 +148,57 @@ bool execute_process(QueueNode *node, int quanta){
     char *line = NULL;
     PCB *pcb = node->pcb;
     int end;
+
     
     for(int i=0; i<quanta ; i++){
         line = mem_get_value_at_line(pcb->PC++);
+        //printf("filename = %s, line got : %s and PC = %i\n", pcb->filename, line, pcb->PC);
 
-
-        if (strcmp(line, "none") == 0) {
-            in_background = false;
-            return true;
-        }
-       
         in_background = true;
 
         if(pcb->priority) {
             pcb->priority = false;
         }
-    
+
+        if (node->pcb->end == node->pcb->PC-1) {
+            if (pcb->temp_size < pcb->full_size) {
+                load_page(pcb->temp_size, pcb->full_size, node);
+
+                //printf("End = %i, start = %i, PC = %i\n", node->pcb->end, node->pcb->start, node->pcb->PC);
+                //printShellMemory();
+
+                ready_queue_add_to_tail(node);
+                parseInput(line); 
+                in_background = false;
+                return false;
+
+            }
+        }
+
+
         if(pcb->PC>pcb->end){
-            //printf("prior : %i, end : %i, pc : %i, start : %i, pcbptstart : %i, pcbptframe# : %i, pcbptsize : %i\n", pcb->priority, pcb->end, pcb->PC, pcb->start, pcb->pt.start, pcb->pt.frame_number, pcb->pt.size);
             parseInput(line);
+
+            if (pcb->temp_size < pcb->full_size) {
+                load_page(pcb->temp_size, pcb->full_size, node);
+                //printf("End111 = %i, start = %i, PC = %i\n", node->pcb->end, node->pcb->start, node->pcb->PC);
+                
+                ready_queue_add_to_tail(node); 
+                //printShellMemory();
+                return false;
+            }
+            //printf("newframe : filename = %s, end : %i, pc : %i, start : %i,  : %i, pcbptsize : %i\n", pcb->filename, pcb->end, pcb->PC, pcb->start, pcb->pt.size);
             terminate_process(node);
+            
             in_background = false;
             return true;
     
         } 
-        //printf("prior : %i, end : %i, pc : %i, start : %i, pcbptstart : %i, pcbptframe# : %i, pcbptsize : %i\n", pcb->priority, pcb->end, pcb->PC, pcb->start, pcb->pt.start, pcb->pt.frame_number, pcb->pt.size); 
+
+
+        //printf("filename = %s, end : %i, pc : %i, start : %i, pcbptsize : %i\n", pcb->filename, pcb->end, pcb->PC, pcb->start, pcb->pt.size);
         parseInput(line);
         in_background = false;
-
     }
     return false;
 }
