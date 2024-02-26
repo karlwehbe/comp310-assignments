@@ -56,7 +56,7 @@ char *extract(char *model) {
 void mem_init(){
 	int fsize = FRAMESIZE;
 	int varsize = VARMEMSIZE;
-	printf("%i and %i\n", fsize, varsize);
+
 	int i;
 	for (i=0; i<(VARMEMSIZE + FRAMESIZE); i++){		
 		shellmemory[i].var = "none";
