@@ -284,20 +284,9 @@ int exec(char *fname1, char *fname2, char *fname3) {
 				error_code = 2;
 				return handle_error(error_code);
 			}
-          /*  int lastPosition = 0; 
-            FILE* file = fopen(filenames[i], "r");
-
-            fseek(file, 0, SEEK_END);
-            long fileSize = ftell(file);
-            fclose(file);
-			*/
+          
             char* filename = loadtobs(filenames[i]); 
-            /*while (lastPosition < fileSize) {
-               // char* page ;
-			//	page = load_page(filename, &lastPosition);
-            //    if (page == NULL) {
-            //        break; 
-            } */   
+               
 			error_code = process_initialize(filename);
 			if (error_code != 0) {
 				return handle_error(error_code);
