@@ -16,9 +16,10 @@ bool debug = false;
 bool in_background = false;
 
 void load_page(int recentsize, int finalsize, QueueNode* node);
-int memFull();
+int memFullorNewStart();
 void mem_set_line(char* filename, char* line, int index);
 int getIndex(char* line);
+
 
 
 
@@ -37,41 +38,67 @@ void load_page(int recentsize, int finalsize, QueueNode* node) {
     int count = 0;
     char ch;
     int index;
+    int freed = 0;
 
-    while (!feof(file)) {
-        
-        line = calloc(1, 101);
-        if (fgets(line, 101, file) != NULL && count < 3) {
-            if (exists(line) != -1) {
+    fseek(file, 0, SEEK_SET); // Make sure we start from the beginning of the file
+    int lineNo = 0; // Keep track of the current line number
+
+    while ((line = calloc(1, 101)) != NULL && fgets(line, 101, file) != NULL && count < 4) {
+        lineNo++;
+         if (exists(line) != -1) {
                 linesread++;
-            }
-
-            if (linesread >= lines_alr_read && exists(line) == -1) {
-                if (memFull() == -1) {
-                    printf("Page fault! Victim page contents:\n");
-                    printf("result = %i", memFull());
-                    for (int i = 0; i < 3; i++) {
-                        printf("%s", mem_get_value_at_line(i));
-                    }
-                    printf("End of victim page contents.\n");
-                    mem_free_lines_between(0,2);
+        }
+        if (lineNo > lines_alr_read && count < lines_toread && exists(line) == -1 && strlen(line) > 1) {
+           // printf("mem full ? : %i\n", memFullorNewStart());
+           if (memFullorNewStart() == -1) {
+                printf("Page fault! Victim page contents:\n");
+                for (int i = 0; i < 3; i++) {
+                    printf("%s", mem_get_value_at_line(i));
                 }
-                //printf("%i\n", memFull());
-                mem_set_line(filename, line, memFull());
-                count++;
-                linesread++;
-                index = getIndex(line);
+                printf("End of victim page contents.\n");
+                mem_free_lines_between(0,2);
+                freed = 1;
             }
-            free(line);
+            //printf("%i\n", memFull());
+            mem_set_line(filename, line, memFullorNewStart());
+            //printShellMemory();
+            count++;
+            linesread++;
+            index = getIndex(line);
+            //printf("index = %i\n", index);
+            free(line); // Make sure to free line after done with it within this scope
+        } else {
+            free(line); // If not processing this line, still need to free the memory
+            if (count >= lines_toread) break; // Break out of the loop if we've read enough lines
         }
     }
-    node->pcb->temp_size++;
-    node->pcb->end = node->pcb->end + count;
 
-    index = getIndex(line) - count + 1;
+    if (freed == 1) {
+        node->pcb->pt[0]->end = index - count + 1;
+        node->pcb->pt[0]->start = index;
+        node->pcb->pt[0]->loaded = 1;
+        node->pcb->full_size--; 
+        node->pcb->PC = index;
+    } else {
+        int k = 0;
+        //printf("new size = %i\n", node->pcb->full_size);
+        for (int i = 0; i < node->pcb->full_size ; i++) {
+            if (node->pcb->pt[i]->loaded == 0) {
+                k = i;
+            }
+        }
 
-    
-    
+        //printf("k = %i\n", k);
+
+        node->pcb->pt[k]->end = index - count + 1;
+        node->pcb->pt[k]->start = index;
+        node->pcb->pt[k]->loaded = 1;
+        node->pcb->temp_size++;
+        printf("START = %i, END = %i and LOADED = %i\n", node->pcb->pt[k]->start, node->pcb->pt[k]->end, node->pcb->pt[k]->loaded);
+        
+    }
+    //printShellMemory();
+ 
     fclose(file);
 
 }
@@ -152,7 +179,7 @@ bool execute_process(QueueNode *node, int quanta){
     
     for(int i=0; i<quanta ; i++){
         line = mem_get_value_at_line(pcb->PC++);
-        //printf("filename = %s, line got : %s and PC = %i\n", pcb->filename, line, pcb->PC);
+        //printf("filename = %s, line got : %s, PC = %i and i = %i\n", pcb->filename, line, pcb->PC, i);
 
         in_background = true;
 
@@ -160,41 +187,23 @@ bool execute_process(QueueNode *node, int quanta){
             pcb->priority = false;
         }
 
-        if (node->pcb->end == node->pcb->PC-1) {
-            if (pcb->temp_size < pcb->full_size) {
-                load_page(pcb->temp_size, pcb->full_size, node);
-
-                //printf("End = %i, start = %i, PC = %i\n", node->pcb->end, node->pcb->start, node->pcb->PC);
-                //printShellMemory();
-
-                ready_queue_add_to_tail(node);
-                parseInput(line); 
-                in_background = false;
-                return false;
-
-            }
-        }
-
-
-        if(pcb->PC>pcb->end){
+        if(pcb->PC > pcb->pt[pcb->PC/3]->end){
             parseInput(line);
 
+            //printf("tempsize = %i and full size = %i\n", pcb->temp_size, pcb->full_size);
+            //printf("PC = %i, and end is = : %i\n", pcb->PC, pcb->end);
+
             if (pcb->temp_size < pcb->full_size) {
                 load_page(pcb->temp_size, pcb->full_size, node);
-                //printf("End111 = %i, start = %i, PC = %i\n", node->pcb->end, node->pcb->start, node->pcb->PC);
-                
                 ready_queue_add_to_tail(node); 
-                //printShellMemory();
                 return false;
             }
-            //printf("newframe : filename = %s, end : %i, pc : %i, start : %i,  : %i, pcbptsize : %i\n", pcb->filename, pcb->end, pcb->PC, pcb->start, pcb->pt.size);
+            
             terminate_process(node);
             
             in_background = false;
             return true;
-    
         } 
-
 
         //printf("filename = %s, end : %i, pc : %i, start : %i, pcbptsize : %i\n", pcb->filename, pcb->end, pcb->PC, pcb->start, pcb->pt.size);
         parseInput(line);
@@ -202,6 +211,7 @@ bool execute_process(QueueNode *node, int quanta){
     }
     return false;
 }
+
 
 void *scheduler_FCFS(){
     QueueNode *cur;
@@ -216,6 +226,7 @@ void *scheduler_FCFS(){
     return 0;
 }
 
+
 void *scheduler_SJF(){
     QueueNode *cur;
     while(true){
@@ -228,6 +239,7 @@ void *scheduler_SJF(){
     }
     return 0;
 }
+
 
 void *scheduler_AGING_alternative(){
     QueueNode *cur;
@@ -244,6 +256,7 @@ void *scheduler_AGING_alternative(){
     }
     return 0;
 }
+
 
 void *scheduler_AGING(){
     QueueNode *cur;
@@ -269,6 +282,7 @@ void *scheduler_AGING(){
     return 0;
 }
 
+
 void *scheduler_RR(void *arg){
     int quanta = ((int *) arg)[0];
     QueueNode *cur;
@@ -284,6 +298,7 @@ void *scheduler_RR(void *arg){
     }
     return 0;
 }
+
 
 int schedule_by_policy(char* policy){ //, bool mt){
     if(strcmp(policy, "FCFS")!=0 && strcmp(policy, "SJF")!=0 && 

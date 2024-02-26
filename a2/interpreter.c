@@ -312,16 +312,6 @@ int exec(char *fname1, char *fname2, char *fname3) {
     return 0;
 }
 
-int resetmem() {
-	for (int i = 300; i < 1000; i++) {
-		if (strcmp(mem_get_value_at_line(i), "none") != 0) {
-			mem_set_value(getvariable(i), "none");
-		}
-		resetvariable(i);	
-	}
-	//printShellMemory();
-    return 1;
-}
 
 char* loadtobs(char* filename) {
 	

@@ -66,7 +66,13 @@ void print_ready_queue(){
 
 void terminate_process(QueueNode *node){
     //node should not be in the ready queue
-    mem_free_lines_between(node->pcb->start, node->pcb->end);
+  
+    for(int i = 0; i < node->pcb->full_size; i++) {
+        if (node->pcb->pt[i] != NULL) {
+            //printf("removing lines : %i  TO  %i\n", node->pcb->pt[i]->start, node->pcb->pt[i]->end);
+            mem_free_lines_between(node->pcb->pt[i]->start, node->pcb->pt[i]->end); 
+        }
+    }
     free(node);
 }
 

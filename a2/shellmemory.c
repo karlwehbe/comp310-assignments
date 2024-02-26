@@ -5,6 +5,15 @@
 
 #define SHELL_MEM_LENGTH 1000
 
+#ifndef FRAMESIZE
+#define FRAMESIZE 300  
+#endif
+
+#ifndef VARMEMSIZE
+#define VARMEMSIZE 700 
+#endif
+
+
 void mem_free_lines_between(int start, int end);
 char * mem_get_value_at_line(int index);
 int memFull();
@@ -16,7 +25,8 @@ struct memory_struct{
 	char *value;
 };
 
-struct memory_struct shellmemory[SHELL_MEM_LENGTH];
+struct memory_struct shellmemory[VARMEMSIZE + FRAMESIZE];
+
 
 // Helper functions
 int match(char *model, char *var) {
@@ -44,8 +54,11 @@ char *extract(char *model) {
 // Shell memory functions
 
 void mem_init(){
+	int fsize = FRAMESIZE;
+	int varsize = VARMEMSIZE;
+	printf("%i and %i\n", fsize, varsize);
 	int i;
-	for (i=0; i<1000; i++){		
+	for (i=0; i<(VARMEMSIZE + FRAMESIZE); i++){		
 		shellmemory[i].var = "none";
 		shellmemory[i].value = "none";
 	}
@@ -54,7 +67,7 @@ void mem_init(){
 // Set key value pair
 void mem_set_value(char *var_in, char *value_in) {
 	int i;
-	for (i=300; i<1000; i++){
+	for (i=FRAMESIZE; i<VARMEMSIZE; i++){
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			shellmemory[i].value = strdup(value_in);
 			return;
@@ -62,7 +75,7 @@ void mem_set_value(char *var_in, char *value_in) {
 	}
 
 	//Value does not exist, need to find a free spot.
-	for (i=300; i<1000; i++){
+	for (i=FRAMESIZE; i<VARMEMSIZE; i++){
 		if (strcmp(shellmemory[i].var, "none") == 0){
 			shellmemory[i].var = strdup(var_in);
 			shellmemory[i].value = strdup(value_in);
@@ -75,7 +88,7 @@ void mem_set_value(char *var_in, char *value_in) {
 
 void frame_set_value(char *var_in, char *value_in) {
 	int i;
-	for (i=0; i<300; i++){
+	for (i=0; i<FRAMESIZE; i++){
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			shellmemory[i].value = strdup(value_in);
 			return;
@@ -83,7 +96,7 @@ void frame_set_value(char *var_in, char *value_in) {
 	}
 
 	//Value does not exist, need to find a free spot.
-	for (i=0; i<300; i++){
+	for (i=0; i<FRAMESIZE; i++){
 		if (strcmp(shellmemory[i].var, "none") == 0){
 			shellmemory[i].var = strdup(var_in);
 			shellmemory[i].value = strdup(value_in);
@@ -96,7 +109,7 @@ void frame_set_value(char *var_in, char *value_in) {
 //get value based on input key
 char *mem_get_value(char *var_in) {
 	int i;
-	for (i=0; i<1000; i++){
+	for (i=0; i<(VARMEMSIZE + FRAMESIZE); i++){
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			return strdup(shellmemory[i].value);
 		} 
@@ -108,7 +121,7 @@ char *mem_get_value(char *var_in) {
 
 void printShellMemory(){
 	int count_empty = 0;
-	for (int i = 0; i < SHELL_MEM_LENGTH; i++){
+	for (int i = 0; i < (FRAMESIZE + VARMEMSIZE); i++){
 		if(strcmp(shellmemory[i].var,"none") == 0){
 			count_empty++;
 		}
@@ -116,7 +129,7 @@ void printShellMemory(){
 			printf("\nline %d: key: %s\t\tvalue: %s\n", i, shellmemory[i].var, shellmemory[i].value);
 		}
     }
-	printf("\n\t%d lines in total, %d lines in use, %d lines free\n\n", SHELL_MEM_LENGTH, SHELL_MEM_LENGTH-count_empty, count_empty);
+	printf("\n\t%d lines in total, %d lines in use, %d lines free\n\n", VARMEMSIZE + FRAMESIZE, (VARMEMSIZE + FRAMESIZE)-count_empty, count_empty);
 }
 
 
@@ -147,7 +160,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 	size_t candidate;
 	while(flag){
 		flag = false;
-		for (i; i < 300; i++){
+		for (i; i < FRAMESIZE; i++){
 			if(strcmp(shellmemory[i].var,"none") == 0 && strcmp(shellmemory[i+1].var,"none") == 0 && strcmp(shellmemory[i+2].var,"none") == 0){
 				*pStart = (int)i;
 				hasSpaceLeft = true;
@@ -155,7 +168,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 			}
 		}
 		candidate = i;
-		for(i; i < 300; i++){
+		for(i; i < FRAMESIZE; i++){
 			if(strcmp(shellmemory[i].var,"none") != 0){
 				flag = true;
 				break;
@@ -166,14 +179,10 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 	//shell memory is full
 	int newstart = 0;
 	if(hasSpaceLeft == 0){
-        printf("Page fault! Victim page contents:\n");
-        for (int i = newstart; i < 3; i++) {
-            printf(mem_get_value_at_line(i));
-        }
-        mem_free_lines_between(i, i+2);
-        printf("End of victim page contents.\n");
-		i = newstart;
-    }
+		error_code = 21;
+		return error_code;
+	}
+        
        
 	   
 	if (i % 3 != 0) {
@@ -187,20 +196,21 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 
 	int maxlines = 6;
 	
-    for (size_t j = i; (j < 300); j++){
+    for (size_t j = i; (j < FRAMESIZE); j++){
         if (feof(fp) || linesRead == maxlines)
         {	
             *pEnd = (int)j-1;
             break;
         }else{	
 			char *value;
-			line = calloc(1, SHELL_MEM_LENGTH);
-			if (fgets(line, SHELL_MEM_LENGTH, fp) == NULL) 
+			line = calloc(1, VARMEMSIZE+FRAMESIZE);
+			if (fgets(line, VARMEMSIZE + FRAMESIZE, fp) == NULL) 
 			
 			{
 				linesRead++;
 				continue;
 			}
+			
 			shellmemory[j].var = strdup(filename);
 			shellmemory[j].value = strndup(line, strlen(line));
 			linesRead++;
@@ -210,12 +220,16 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 					mem_set_value(var, val);
 			}
 			free(line);
-			
         }
+
+		if (j == FRAMESIZE - 1) {
+			*pEnd = (int)j;
+            break;	
+		}
     }
 
 	//no space left to load the entire file into shell memory
-	if(!feof(fp) && linesRead < 6){
+	if(!feof(fp) && linesRead < 6 && *pEnd == FRAMESIZE - 1){
 		error_code = 21;
 		//clean up the file in memory
 		for(int j = 1; i <= SHELL_MEM_LENGTH; i ++){
@@ -232,12 +246,12 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 
 
 char * mem_get_value_at_line(int index){
-	if(index<0 || index > SHELL_MEM_LENGTH) return NULL; 
+	if(index<0 || index > (VARMEMSIZE + FRAMESIZE)) return NULL; 
 	return shellmemory[index].value;
 }
 
 void mem_free_lines_between(int start, int end){
-	for (int i=start; i<=end && i<SHELL_MEM_LENGTH; i++){
+	for (int i=start; i<=end && i< (VARMEMSIZE + FRAMESIZE); i++){
 		if(shellmemory[i].var != NULL){
 			free(shellmemory[i].var);
 		}	
@@ -249,7 +263,7 @@ void mem_free_lines_between(int start, int end){
 	}
 }
 char *getvariable(int index) {
-	if(index<0 || index > SHELL_MEM_LENGTH) return NULL; 
+	if(index<0 || index > (VARMEMSIZE + FRAMESIZE)) return NULL; 
 	return shellmemory[index].var;
 }
 
@@ -260,7 +274,7 @@ void *resetvariable(int index) {
 }
 
 int exists(char* variable) {
-	for (int i = 0; i < 300; i++) {
+	for (int i = 0; i < FRAMESIZE; i++) {
 		if (strcmp(mem_get_value_at_line(i), variable) == 0) {
 			return i;
 		}
@@ -269,9 +283,9 @@ int exists(char* variable) {
 
 }
 
-int memFull() {
+int memFullorNewStart() {
 	int i;
-	for (i = 0; i < 300; i+=3) {
+	for (i = 0; i < FRAMESIZE; i+=3) {
 		if (strcmp(mem_get_value_at_line(i), "none") == 0 && 
 				strcmp(mem_get_value_at_line(i+1),"none") == 0 && 
 				strcmp(mem_get_value_at_line(i+2), "none") == 0) {
@@ -293,9 +307,19 @@ void mem_set_line(char* filename, char* line, int index) {
 }
 
 int getIndex(char* line) {
-	for (int i = 0; i < 300 ; i++) {
+	for (int i = 0; i < FRAMESIZE ; i++) {
 		if (strcmp(mem_get_value_at_line(i), line) == 0) {
 			return i;
 		}
 	}
+}
+
+int resetmem() {
+	for (int i = FRAMESIZE; i < VARMEMSIZE; i++) {
+		if (strcmp(mem_get_value_at_line(i), "none") != 0) {
+			mem_set_value(getvariable(i), "none");
+		}
+		resetvariable(i);	
+	}
+    return 1;
 }

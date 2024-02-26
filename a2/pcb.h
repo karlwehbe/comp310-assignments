@@ -13,11 +13,8 @@
 
 typedef struct PAGE PAGE;
 struct PAGE {
-    int frame_number;
-    int pageid;
     int start;
     int end;
-    int size;
     int loaded;
 };
 typedef struct
@@ -28,7 +25,7 @@ typedef struct
     int start;
     int end;
     int job_length_score; 
-    PAGE pt; 
+    PAGE* pt[10]; 
     int endof_file;
     int temp_size;
     int full_size;
