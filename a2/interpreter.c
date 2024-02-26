@@ -187,6 +187,7 @@ int quit(){
 int set(char* var, char* value){
 	char *link = "=";
 	char buffer[1000];
+	//printf("var = %s and value = %s\n", var, value);
 	strcpy(buffer, var);
 	strcat(buffer, link);
 	strcat(buffer, value);

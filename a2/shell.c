@@ -91,6 +91,7 @@ int parseInput(char *ui) {
             for(; ui[a]==' ' && a<1000; a++);        // skip white spaces
             continue;
         }
+        //printf("words bef= %s\n", words[w]);
         w++;
         a++; 
     }

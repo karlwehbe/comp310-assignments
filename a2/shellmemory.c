@@ -3,7 +3,7 @@
 #include<stdio.h>
 #include<stdbool.h>
 
-#define SHELL_MEM_LENGTH 1000
+#define SHELL_MEM_LENGTH (VARMEMSIZE + FRAMESIZE)
 
 #ifndef FRAMESIZE
 #define FRAMESIZE 300  
@@ -67,7 +67,8 @@ void mem_init(){
 // Set key value pair
 void mem_set_value(char *var_in, char *value_in) {
 	int i;
-	for (i=FRAMESIZE; i<VARMEMSIZE; i++){
+	//printf("fsize, %i, var size = %i\n", FRAMESIZE, SHELL_MEM_LENGTH);
+	for (i=FRAMESIZE; i<SHELL_MEM_LENGTH; i++){
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			shellmemory[i].value = strdup(value_in);
 			return;
@@ -75,7 +76,7 @@ void mem_set_value(char *var_in, char *value_in) {
 	}
 
 	//Value does not exist, need to find a free spot.
-	for (i=FRAMESIZE; i<VARMEMSIZE; i++){
+	for (i=FRAMESIZE; i<SHELL_MEM_LENGTH; i++){
 		if (strcmp(shellmemory[i].var, "none") == 0){
 			shellmemory[i].var = strdup(var_in);
 			shellmemory[i].value = strdup(value_in);
@@ -315,7 +316,7 @@ int getIndex(char* line) {
 }
 
 int resetmem() {
-	for (int i = FRAMESIZE; i < VARMEMSIZE; i++) {
+	for (int i = FRAMESIZE; i < SHELL_MEM_LENGTH; i++) {
 		if (strcmp(mem_get_value_at_line(i), "none") != 0) {
 			mem_set_value(getvariable(i), "none");
 		}

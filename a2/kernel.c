@@ -205,7 +205,7 @@ bool execute_process(QueueNode *node, int quanta){
             return true;
         } 
 
-        //printf("filename = %s, end : %i, pc : %i, start : %i, pcbptsize : %i\n", pcb->filename, pcb->end, pcb->PC, pcb->start, pcb->pt.size);
+       // printf("filename = %s, line : %s34233, pc : %i, start : %i\n", pcb->filename, line, pcb->PC, pcb->start);
         parseInput(line);
         in_background = false;
     }
