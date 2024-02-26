@@ -94,7 +94,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node) {
         node->pcb->pt[k]->start = index;
         node->pcb->pt[k]->loaded = 1;
         node->pcb->temp_size++;
-        printf("START = %i, END = %i and LOADED = %i\n", node->pcb->pt[k]->start, node->pcb->pt[k]->end, node->pcb->pt[k]->loaded);
+        //printf("START = %i, END = %i and LOADED = %i\n", node->pcb->pt[k]->start, node->pcb->pt[k]->end, node->pcb->pt[k]->loaded);
         
     }
     //printShellMemory();
