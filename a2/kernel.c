@@ -31,7 +31,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
 
     char* line;
     int lines_alr_read = recentsize * 3;
-    int lines_toread = (finalsize - recentsize) *3;
+    int lines_toread = 3;;
     int linesread = 0;
 
     int count = 0;
@@ -60,21 +60,31 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
                 printf("End of victim page contents.\n");
                 mem_free_lines_between(removefrom, removeto);
                 freed = 1;
+
+                lastused->end = 0;
+                lastused->executed = 0;
+                lastused->start = 0;
+                lastused->last_used = 0;
             }
+            //printf("\n currently putting the line : %s", line);
             count++;
             linesread++;
             if (count > 1) {
-                mem_set_line(filename, line, index + count -1);
+                mem_set_line(filename, line, index + 1);
             } else 
                 mem_set_line(filename, line, memFullorNewStart());
             index = getIndex(line);
+            //printf(" and index of tha line is %i\n", index);
             free(line); 
             //printShellMemory();
             } else {
                 free(line); 
                 if (count >= lines_toread) break; 
             }
+        if (count >= lines_toread) break;  
     }
+
+    //printf("tempsize = %i and full size = %i\n", node->pcb->temp_size , node->pcb->full_size);
 
     if (freed == 1) {
         int k = 0;
@@ -95,10 +105,8 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
 
     } else {
         int k = 0;
-        for (int i = 0; i < node->pcb->full_size ; i++) {
-            if (node->pcb->pt[i]->loaded == 0) {
+        for (int i = 0; i < node->pcb->pt[i]->loaded == 1; i++) {
                 k = i;
-            }
         }
         
         node->pcb->pt[k]->end = index;
@@ -149,7 +157,7 @@ int process_initialize(char *filename){
 
     int newend = *start + (lines-1) ;
  
-    //printf("\nFilename = %s and start = %i and end = %i\n", filename, *start, *end);
+    //printf("\nFilename = %s and start = %i and end = %i but acc end = %i\n", filename, *start, *end, newend);
     if(error_code != 0){
         fclose(fp);
         return FILE_ERROR;
@@ -159,7 +167,6 @@ int process_initialize(char *filename){
     QueueNode *node = malloc(sizeof(QueueNode));
     node->pcb = newPCB;
     ready_queue_add_to_tail(node);   
-    
     return 0;
         
 }
@@ -479,6 +486,7 @@ void *scheduler_RR(void *arg){
                 for (int j = 0; j < c; j++) {
                     if (k == j) {
                         //printf("k = %i, j= %i\n", k, j);
+                        //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
                         if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {
                             
                             int lastused = 0;
@@ -498,6 +506,7 @@ void *scheduler_RR(void *arg){
                             } 
 
                             //printf("last used = == %i\n", lastused);
+                            //printf("last used starts at : %i and end at %i\n", lastusedframe->start, lastusedframe->end);
 
 
                             load_page(totalPCB[j]->pcb->temp_size, totalPCB[j]->pcb->full_size, totalPCB[j], lastusedframe);

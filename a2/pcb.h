@@ -27,7 +27,7 @@ typedef struct
     int start;
     int end;
     int job_length_score; 
-    PAGE* pt[10]; 
+    PAGE* pt[30]; 
     int endof_file;
     int temp_size;
     int full_size;

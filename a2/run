@@ -1,5 +1,5 @@
 #bin/bash/!
 
 make clean
-make myshell framesize=6 varmemsize=10
+make myshell framesize=3000 varmemsize=1000
 ./myshell

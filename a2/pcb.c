@@ -31,12 +31,12 @@ PCB* makePCB(int start, int end, int acc_end, char* filename) {
     int newstart = start;
     int i = 0;
     
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 30; i++) {
         if (i < numofpages) {
             newPCB->pt[i] = malloc(sizeof(PAGE));
 
             newPCB->pt[i]->start = newstart;
-            newPCB->pt[i]->end = (newstart + 2 <= end) ? newstart + 2 : end;
+            newPCB->pt[i]->end = newstart + 2;
             newPCB->pt[i]->loaded = 1; 
             newPCB->pt[i]->executed = 0;
             newPCB->pt[i]->last_used = 0;
@@ -47,16 +47,15 @@ PCB* makePCB(int start, int end, int acc_end, char* filename) {
             newPCB->pt[i] = malloc(sizeof(PAGE));
 
             newPCB->pt[i]->start = newstart;
-            newPCB->pt[i]->end = (newstart + 2 <= end) ? newstart + 2 : end;
+            newPCB->pt[i]->end = newstart + 2;
             newPCB->pt[i]->loaded = 0; 
             newPCB->pt[i]->executed = 0;
             newPCB->pt[i]->last_used = 0;
 
-            newstart += 3; // Move to the next set of lines
+            newstart += 3; 
             //printf("START = %i, END = %i, LOADED = %i\n",  newPCB->pt[i]->start, newPCB->pt[i]->end, newPCB->pt[i]->loaded);
         }
     }
-
 
     return newPCB;
 }
