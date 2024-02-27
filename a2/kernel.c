@@ -313,9 +313,10 @@ void *scheduler_FCFS(){
                     }
                 }
                 load_page(cur->pcb->temp_size, cur->pcb->full_size, cur, lastusedframe);
+                ready_queue_add_to_tail(cur);
                 stillrunning = 1;
             } else {
-            stillrunning = 0;
+                stillrunning = 0;
             }
         }
     }
