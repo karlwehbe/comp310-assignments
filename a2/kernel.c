@@ -80,8 +80,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
             } else {
                 free(line); 
                 if (count >= lines_toread) break; 
-            }
-        if (count >= lines_toread) break;  
+            } 
     }
 
     //printf("tempsize = %i and full size = %i\n", node->pcb->temp_size , node->pcb->full_size);
@@ -105,8 +104,10 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
 
     } else {
         int k = 0;
-        for (int i = 0; i < node->pcb->pt[i]->loaded == 1; i++) {
+         for (int i = 0; i < node->pcb->full_size ; i++) {
+            if (node->pcb->pt[i]->loaded == 0) {
                 k = i;
+            }
         }
         
         node->pcb->pt[k]->end = index;
@@ -261,7 +262,7 @@ int execute_process(QueueNode *node, int quanta){
                     pcb->pt[j]->last_used++; 
                     //printf("for filename %s and pcbid %i, im currently in framenumber %i and lastused = %i\n",pcb->filename, pcb->pid, j, pcb->pt[j]->last_used);
                 }
-            }    
+            }  
 
 
             int small = 0;
@@ -494,11 +495,13 @@ void *scheduler_RR(void *arg){
 
                             for (int i = 0; i < 3; i++) {
                                 if (totalPCB[i] != NULL && totalPCB[i]->pcb != NULL) {
-                                for (int j = 0; totalPCB[i]->pcb->pt[j]->loaded == 1; j++) {
+                                    for (int j = 0; totalPCB[i]->pcb->pt[j]->loaded == 1; j++) {
                                         if (totalPCB[i]->pcb->pt[j]->executed == 1) {
                                             if (totalPCB[i]->pcb->pt[j]->last_used > lastused) {
                                                 lastused = totalPCB[i]->pcb->pt[j]->last_used;
                                                 lastusedframe = totalPCB[i]->pcb->pt[j];
+                                                //printf("filename = %s and frame# = %i\n", totalPCB[i]->pcb->filename, j);
+                                                
                                             }
                                         }
                                    }
