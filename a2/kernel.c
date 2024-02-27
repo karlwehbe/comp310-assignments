@@ -74,9 +74,8 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
             } else 
                 mem_set_line(filename, line, memFullorNewStart());
             index = getIndex(line);
-            //printf(" and index of tha line is %i\n", index);
+           // printf(" and index of tha line is %i\n", index);
             free(line); 
-            //printShellMemory();
             } else {
                 free(line); 
                 if (count >= lines_toread) break; 
@@ -100,7 +99,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
         //printf("k = %i, START = %i, END = %i and LOADED = %i\n", 0, node->pcb->pt[k]->start, node->pcb->pt[k]->end, node->pcb->pt[k]->loaded);
         node->pcb->PC = 0;
         node->pcb->end = count - 1;
-        ready_queue_add_to_tail(node);
+        //ready_queue_add_to_tail(node);
 
     } else {
         
@@ -116,12 +115,11 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
         //printf("k = %i, START = %i, END = %i and LOADED = %i\n", i, node->pcb->pt[i]->start, node->pcb->pt[i]->end, node->pcb->pt[i]->loaded);
         node->pcb->PC = index - count + 1;
         node->pcb->end = index;
-        ready_queue_add_to_tail(node);
+        //ready_queue_add_to_tail(node);
 
     }
 
-    
-
+    //printShellMemory();
     fclose(file);
 }
 
@@ -269,8 +267,7 @@ int execute_process(QueueNode *node, int quanta){
                 small = 1;
             }
             
-            if ((node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && (node->next == NULL && pcb->temp_size == pcb->full_size))) {
-                //printf("im hereererere\n");
+            if ((node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
                 return 2;
             }
         
@@ -435,10 +432,10 @@ void *scheduler_RR(void *arg){
                    }   
                 }
             }
-
+        }
             done = execute_process(cur, quanta);
             //printf("done == %i\n", done);
-        }
+        
 
         //printf("done = %i\n", done);
         if(done == 0) {
@@ -452,6 +449,8 @@ void *scheduler_RR(void *arg){
                 stillrunning = 1;
 
         } else if (done == 2) {
+
+            loaded = 0;
             
             int c = 0;
             for (int i = 0; i < 3; i++) {
@@ -508,17 +507,18 @@ void *scheduler_RR(void *arg){
                             //printf("last used = == %i\n", lastused);
                             //printf("last used starts at : %i and end at %i\n", lastusedframe->start, lastusedframe->end);
                             load_page(totalPCB[j]->pcb->temp_size, totalPCB[j]->pcb->full_size, totalPCB[j], lastusedframe);
+                            ready_queue_add_to_tail(totalPCB[j]);
                             loaded = 1;
                             if (c > 1 ){
                                 skip = 1;
                                 cur = totalPCB[j];
                             }
-                            
                         }
                     }
                 }
             }
 
+            
             int over = 0;
             for (int j = 0; j < c; j++) {
                 //printf("tempsize = %i and full size = %i \n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
@@ -526,9 +526,17 @@ void *scheduler_RR(void *arg){
                     over++;
                 }
             }
-            if (over == c &&  loaded == 0) {
-                stillrunning = 0;
-            } else if (over == c && loaded == 1) { 
+
+            //printf("over = %i, c = %i, loaded = %i\n", over, c, loaded);
+            if (over == c && loaded == 0) {
+                if (cur->next) {
+                    //printf("asdsadsa");
+                    stillrunning = 1;
+                } else {
+                    stillrunning = 0;
+                }
+            } else if (over == c && loaded == 1) {
+                //printf("im here"); 
                 stillrunning = 1;    
                 skip = 0;
             }

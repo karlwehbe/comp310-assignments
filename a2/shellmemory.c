@@ -300,6 +300,11 @@ void mem_set_line(char* filename, char* line, int index) {
 		if (strcmp(mem_get_value_at_line(i), "none") == 0) {
 			shellmemory[i].value = strndup(line, strlen(line));
 			shellmemory[i].var = filename;
+			if (strncmp(line, "set ", 4) == 0) {
+				char val[150], var[150];
+				if (sscanf(line, "set %150s %150s", var, val) > 1)
+					mem_set_value(var, val);
+			}	
 			break;
 		}
 	}
