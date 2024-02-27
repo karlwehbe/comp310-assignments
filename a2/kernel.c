@@ -432,17 +432,16 @@ void *scheduler_RR(void *arg){
                    }   
                 }
             }
-        }
+        
             done = execute_process(cur, quanta);
             //printf("done == %i\n", done);
-        
+        }
 
         //printf("done = %i\n", done);
         if(done == 0) {
             ready_queue_add_to_tail(cur);
 
         } if (done == 1) {
-
             if (cur->next == NULL)
                 stillrunning = 0;
             if (cur->next != NULL)
