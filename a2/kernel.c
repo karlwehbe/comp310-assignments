@@ -103,18 +103,17 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
         ready_queue_add_to_tail(node);
 
     } else {
-        int k = 0;
-         for (int i = 0; i < node->pcb->full_size ; i++) {
-            if (node->pcb->pt[i]->loaded == 0) {
-                k = i;
-            }
+        
+        int i = 0;
+        while (node->pcb->pt[i]->loaded != 0) {
+            i++;
         }
         
-        node->pcb->pt[k]->end = index;
-        node->pcb->pt[k]->start = index - count + 1;
-        node->pcb->pt[k]->loaded = 1;
+        node->pcb->pt[i]->end = index;
+        node->pcb->pt[i]->start = index - count + 1;
+        node->pcb->pt[i]->loaded = 1;
         node->pcb->temp_size++;
-        //printf("k = %i, START = %i, END = %i and LOADED = %i\n", k, node->pcb->pt[k]->start, node->pcb->pt[k]->end, node->pcb->pt[k]->loaded);
+        //printf("k = %i, START = %i, END = %i and LOADED = %i\n", i, node->pcb->pt[i]->start, node->pcb->pt[i]->end, node->pcb->pt[i]->loaded);
         node->pcb->PC = index - count + 1;
         node->pcb->end = index;
         ready_queue_add_to_tail(node);
