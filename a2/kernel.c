@@ -74,7 +74,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
             } else 
                 mem_set_line(filename, line, memFullorNewStart());
             index = getIndex(line);
-           // printf(" and index of tha line is %i\n", index);
+            //printf(" and index of tha line is %i\n", index);
             free(line); 
             } else {
                 free(line); 
@@ -484,9 +484,14 @@ void *scheduler_RR(void *arg){
             if (k >= 0 && totalPCB[k] != NULL) {
                 for (int j = 0; j < c; j++) {
                     if (k == j) {
+                        cur = totalPCB[j];
                         //printf("k = %i, j= %i\n", k, j);
-                       //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
-                        if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {  
+                        //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
+                        //printf("cur filename == %s\n", cur->pcb->filename);
+                        if (present(cur->pcb->filename)) {
+                            skip = 0;
+                        }
+                        else if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {  
                             int lastused = 0;
                             PAGE* lastusedframe;
 
@@ -511,7 +516,6 @@ void *scheduler_RR(void *arg){
                             loaded = 1;
                             if (c > 1 ){
                                 skip = 1;
-                                cur = totalPCB[j];
                             }
                         }
                     }

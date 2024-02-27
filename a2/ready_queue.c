@@ -185,3 +185,15 @@ void ready_queue_promote(int score){
     head = next;
 }
 
+int present(char* filename) {
+    QueueNode *cur  = head;
+     while(cur!=NULL){
+        if (strcmp(cur->pcb->filename, filename) ==0) {
+            return 1;
+        }
+        cur = cur->next;
+    }
+    return 0;
+
+}
+
