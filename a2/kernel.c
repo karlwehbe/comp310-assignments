@@ -50,7 +50,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
         if (exists(line) != -1) {
             linesread++;
         }
-        //printf("line = %s, lineNo = %i, linesalread = %i and linestoread = %i and count == %i, index of new lines = %i\n", line, lineNo, lines_alr_read, lines_toread, count, index);
+        //printf("lineNo = %i, linesalread = %i and linestoread = %i and count == %i, index of new lines = %i\n", lineNo, lines_alr_read, lines_toread, count, index);
         if (lineNo > lines_alr_read && count < lines_toread && exists(line) == -1) {
            if (memFullorNewStart() == -1 && freed == 0) {
                 printf("Page fault! Victim page contents:\n");
@@ -83,7 +83,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
             } 
     }
 
-    //printf("tempsize = %i and full size = %i\n", node->pcb->temp_size , node->pcb->full_size);
+    //printf("in loadpage : tempsize = %i and full size = %i\n", node->pcb->temp_size , node->pcb->full_size);
 
     if (freed == 1) {
         int k = 0;
@@ -252,7 +252,7 @@ int execute_process(QueueNode *node, int quanta){
 
         if(pcb->PC > pcb->end){
 
-           // printf("still here\n");
+           //printf("still here\n");
 
             parseInput(line);       
 
@@ -388,7 +388,7 @@ void *scheduler_RR(void *arg){
     QueueNode *cur;
     QueueNode* totalPCB[3];
     int done = -1;
-    int stillrunning = 0;
+    int stillrunning = 1;
     int skip = 0;
     int twice = 0;
     
@@ -398,10 +398,9 @@ void *scheduler_RR(void *arg){
         totalPCB[i]->pcb = NULL;
     }
 
-    
-    while(true){
+    while(stillrunning == 1){
 
-        if(is_ready_empty() && stillrunning == 0){
+        if(is_ready_empty()){
             if(active) 
                 continue;
             else break;
@@ -443,6 +442,7 @@ void *scheduler_RR(void *arg){
             }
 
             done = execute_process(cur, quanta);
+            //printf("done == %i\n", done);
         }
 
         //printf("done = %i\n", done);
@@ -450,7 +450,30 @@ void *scheduler_RR(void *arg){
             ready_queue_add_to_tail(cur);
 
         } if (done == 1) {
-            stillrunning = 0;
+
+            int notdone = 0;
+            int j = 0;
+            while (notdone == 0 || j < 3){
+                if (totalPCB[j]->pcb != NULL) {
+                    //printf("in done == 1 : tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
+                    if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {   
+                        notdone++;
+                        j++;
+                    } else {
+                        j++;
+                    }
+                } else {
+                    j++;
+                }
+            }
+
+            if (notdone > 0) {
+                stillrunning = 1;
+            } else {
+                stillrunning = 0;
+            }
+
+            //printf("notdone = %i and still running = %i and j = %i\n", notdone, stillrunning, j);
 
         } else if (done == 2) {
             
@@ -482,13 +505,13 @@ void *scheduler_RR(void *arg){
                 } 
             }
 
+            
             if (k >= 0 && totalPCB[k] != NULL) {
                 for (int j = 0; j < c; j++) {
                     if (k == j) {
                         //printf("k = %i, j= %i\n", k, j);
                         //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
-                        if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {
-                            
+                        if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {  
                             int lastused = 0;
                             PAGE* lastusedframe;
 
@@ -509,23 +532,35 @@ void *scheduler_RR(void *arg){
 
                             //printf("last used = == %i\n", lastused);
                             //printf("last used starts at : %i and end at %i\n", lastusedframe->start, lastusedframe->end);
-
-
                             load_page(totalPCB[j]->pcb->temp_size, totalPCB[j]->pcb->full_size, totalPCB[j], lastusedframe);
-                            stillrunning = 1;
                             if (c > 1) {
                                 skip = 1;
                                 cur = totalPCB[j];
                                 twice++;
-                            }
-                        } else {
-                            stillrunning = 0;
+                            } 
                         }
                     }
                 }
             }
+            
+            int n = 0;
+            for (int i = 0; i < 3; i++) {
+                if (totalPCB[i] != NULL && totalPCB[i]->pcb != NULL) {
+                   for (int j = 0; totalPCB[i]->pcb->pt[j]->loaded == 1; j++) {
+                        if (totalPCB[i]->pcb->pt[j]->executed == 0) {
+                            n = 1;
+                            break;
+                        }
+                   }   
+                }
+            }
+            if (n == 1) {
+                stillrunning = 1;
+                skip = 0;
+            } else {
+                stillrunning = 0;
+            }
         }
-
     }
     return 0;
 }

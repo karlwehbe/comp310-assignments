@@ -204,9 +204,8 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
             break;
         }else{	
 			char *value;
-			line = calloc(1, VARMEMSIZE+FRAMESIZE);
-			if (fgets(line, VARMEMSIZE + FRAMESIZE, fp) == NULL) 
-			
+			line = calloc(1, 101);
+			if (fgets(line, 101, fp) == NULL) 
 			{
 				linesRead++;
 				continue;
@@ -216,8 +215,8 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 			shellmemory[j].value = strndup(line, strlen(line));
 			linesRead++;
 			if (strncmp(line, "set ", 4) == 0) {
-				char val[100], var[100];
-				if (sscanf(line, "set %99s %99s", var, val) > 1)
+				char val[150], var[150];
+				if (sscanf(line, "set %150s %150s", var, val) > 1)
 					mem_set_value(var, val);
 			}
 			free(line);
