@@ -390,7 +390,7 @@ void *scheduler_RR(void *arg){
     int done = -1;
     int stillrunning = 1;
     int skip = 0;
-    int twice = 0;
+    int loaded = 0;
     
     for (int i = 0; i < 3; i++) {
         totalPCB[i] = malloc(sizeof(QueueNode));
@@ -404,11 +404,6 @@ void *scheduler_RR(void *arg){
             if(active) 
                 continue;
             else break;
-        }
-
-        if (twice == 2) {
-            skip = 0;
-            twice = 0;
         }
 
         if (skip == 0) {
@@ -451,29 +446,10 @@ void *scheduler_RR(void *arg){
 
         } if (done == 1) {
 
-            int notdone = 0;
-            int j = 0;
-            while (notdone == 0 || j < 3){
-                if (totalPCB[j]->pcb != NULL) {
-                    //printf("in done == 1 : tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
-                    if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {   
-                        notdone++;
-                        j++;
-                    } else {
-                        j++;
-                    }
-                } else {
-                    j++;
-                }
-            }
-
-            if (notdone > 0) {
-                stillrunning = 1;
-            } else {
+            if (cur->next == NULL)
                 stillrunning = 0;
-            }
-
-            //printf("notdone = %i and still running = %i and j = %i\n", notdone, stillrunning, j);
+            if (cur->next != NULL)
+                stillrunning = 1;
 
         } else if (done == 2) {
             
@@ -510,7 +486,7 @@ void *scheduler_RR(void *arg){
                 for (int j = 0; j < c; j++) {
                     if (k == j) {
                         //printf("k = %i, j= %i\n", k, j);
-                        //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
+                       //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
                         if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {  
                             int lastused = 0;
                             PAGE* lastusedframe;
@@ -523,7 +499,6 @@ void *scheduler_RR(void *arg){
                                                 lastused = totalPCB[i]->pcb->pt[j]->last_used;
                                                 lastusedframe = totalPCB[i]->pcb->pt[j];
                                                 //printf("filename = %s and frame# = %i\n", totalPCB[i]->pcb->filename, j);
-                                                
                                             }
                                         }
                                    }
@@ -533,32 +508,29 @@ void *scheduler_RR(void *arg){
                             //printf("last used = == %i\n", lastused);
                             //printf("last used starts at : %i and end at %i\n", lastusedframe->start, lastusedframe->end);
                             load_page(totalPCB[j]->pcb->temp_size, totalPCB[j]->pcb->full_size, totalPCB[j], lastusedframe);
-                            if (c > 1) {
+                            loaded = 1;
+                            if (c > 1 ){
                                 skip = 1;
                                 cur = totalPCB[j];
-                                twice++;
-                            } 
+                            }
+                            
                         }
                     }
                 }
             }
-            
-            int n = 0;
-            for (int i = 0; i < 3; i++) {
-                if (totalPCB[i] != NULL && totalPCB[i]->pcb != NULL) {
-                   for (int j = 0; totalPCB[i]->pcb->pt[j]->loaded == 1; j++) {
-                        if (totalPCB[i]->pcb->pt[j]->executed == 0) {
-                            n = 1;
-                            break;
-                        }
-                   }   
+
+            int over = 0;
+            for (int j = 0; j < c; j++) {
+                //printf("tempsize = %i and full size = %i \n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
+                if (totalPCB[j]->pcb->temp_size == totalPCB[j]->pcb->full_size) {   
+                    over++;
                 }
             }
-            if (n == 1) {
-                stillrunning = 1;
-                skip = 0;
-            } else {
+            if (over == c &&  loaded == 0) {
                 stillrunning = 0;
+            } else if (over == c && loaded == 1) { 
+                stillrunning = 1;    
+                skip = 0;
             }
         }
     }
