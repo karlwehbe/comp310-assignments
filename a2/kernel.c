@@ -194,13 +194,32 @@ int execute_process(QueueNode *node, int quanta){
     
     for(int i=0; i<quanta ; i++){
         line = mem_get_value_at_line(pcb->PC++);
-        
-    
+
+        //printf("line = %s\n", line);
         //printf("PC = %i, and end of frame = %i\n", pcb->PC, pcb->end);
 
-            int index = getIndex(line);
-            int framenumber;
+        int index = getIndex(line);
+        int framenumber;
 
+        if (quanta == MAX_INT) {
+           for (int i = 0; pcb->pt[i]->loaded == 1; i++) {
+                if (pcb->pt[i]->start <= index && pcb->pt[i]->end >= index) {
+                    framenumber = i;
+                }
+            }   
+
+            if (pcb->pt[framenumber]->end == pcb->PC-1) {
+                for (int i = 0; pcb->pt[i]->loaded == 1; i++) {
+                    if (i == framenumber) {    
+                        pcb->pt[i]->executed = 1;
+                        //printf("before parse : for filename %s and pcbid %i, im currently in framenumber %i\n", pcb->filename, pcb->pid, i);
+                    } else {
+                        pcb->pt[i]->last_used++;
+                    } 
+                }
+            }   
+        
+        } else {
             for (int i = 0; pcb->pt[i]->loaded == 1; i++) {
                 if (pcb->pt[i]->start <= index && pcb->pt[i]->end >= index) {
                     framenumber = i;
@@ -215,6 +234,8 @@ int execute_process(QueueNode *node, int quanta){
                     } 
                 }
             }  
+        }
+
 
         in_background = true;
 
@@ -224,7 +245,17 @@ int execute_process(QueueNode *node, int quanta){
 
         if(pcb->PC > pcb->end){
 
-            parseInput(line);        
+           // printf("still here\n");
+
+            parseInput(line);       
+
+            for (int j = 0; pcb->pt[j]->loaded == 1; j++) {
+                if (pcb->pt[j]->executed == 1 && framenumber != j) {
+                    pcb->pt[j]->last_used++; 
+                    //printf("for filename %s and pcbid %i, im currently in framenumber %i and lastused = %i\n",pcb->filename, pcb->pid, j, pcb->pt[j]->last_used);
+                }
+            }    
+
 
             int small = 0;
             if (strcmp(getvariable(5), "none") == 0) {
@@ -251,18 +282,9 @@ int execute_process(QueueNode *node, int quanta){
 
 void *scheduler_FCFS(){
     QueueNode *cur;
-    QueueNode* totalPCB[3];
     int stillrunning = 0;
-    int skip = 0;
-    int twice = 0;
     int done = -1;
     
-    for (int i = 0; i < 3; i++) {
-        totalPCB[i] = malloc(sizeof(QueueNode));
-        totalPCB[i]->next = NULL;
-        totalPCB[i]->pcb = NULL;
-    }
-
 
     while(true){
         if(is_ready_empty() && stillrunning == 0){
@@ -270,104 +292,30 @@ void *scheduler_FCFS(){
                 continue;
             else break;
         }
-
-        if (twice == 2) {
-            skip = 0;
-            twice = 0;
-        }
-
-        if (skip == 0) {
-            cur = ready_queue_pop_head();
-            int isAlreadyTracked = 0;
-            for (int i = 0; i < 3; i++) {
-                if (totalPCB[i]->pcb != NULL && totalPCB[i]->pcb->pid == cur->pcb->pid) {
-                    isAlreadyTracked = 1;
-                    break; 
-                }
-            }
-            if (isAlreadyTracked == 0) {
-                for (int i = 0; i < 3; i++) {
-                    if (totalPCB[i]->pcb == NULL) {
-                        totalPCB[i] = cur;
-                        break; 
-                    }
-                }
-            }
-
-    
-        int framenumber;
-
-        for (int i = 0; cur->pcb->pt[cur->pcb->PC-1]->loaded == 1; i++) {
-            if (cur->pcb->pt[i]->start <= cur->pcb->PC-1 && cur->pcb->pt[i]->end >= cur->pcb->PC-1) {
-                framenumber = i;
-                //printf("for filename %s and pcbid %i, im currently in framenumber %i\n", cur->pcb->filename, cur->pcb->pid, i);
-            }
-        }
-
-        if (cur->pcb->pt[framenumber]->end == cur->pcb->PC -1) {
-            for (int i = 0; cur->pcb->pt[i]->loaded == 1; i++) {
-                if (i == framenumber) {    
-                    cur->pcb->pt[i]->executed = 1;
-                    //printf("for filename %s and pcbid %i, im currently in framenumber %i\n", cur->pcb->filename, cur->pcb->pid, i);
-                } if (cur->pcb->pt[i]->executed != 0 && i != framenumber) {
-                    cur->pcb->pt[i]->last_used++;
-                    //printf("for filename %s and pcbid %i, im currently in framenumber %i and lastused = %i\n", cur->pcb->filename, cur->pcb->pid, i, cur->pcb->pt[i]->last_used);
-                }
-            }
-        }
-
-            done = execute_process(cur, MAX_INT);
-        }
-
+        cur = ready_queue_pop_head();
+        
+        done = execute_process(cur, MAX_INT);
 
         if (done == 2) {
-            int c = 0;
-            for (int i = 0; i < 3; i++) {
-                if (totalPCB[i] != NULL && totalPCB[i]->pcb != NULL) {
-                    //printf("PCB %i Filename: %s\n", i, totalPCB[i]->pcb->filename);  
-                    c = c+1; 
-                }
-            }
-           
-            int k = -1;
-
-            if (c == 1) {
-                k = 0;
-            } else if (c == 2) {
-                if (cur->pcb->pid == totalPCB[0]->pcb->pid) {
-                    k = 1;
-                } else {
-                    k = 0;
-                }
-            } else if (c == 3) {
-               if (cur->pcb->pid == totalPCB[0]->pcb->pid) {
-                    k = 1;
-                } else if (cur->pcb->pid == totalPCB[1]->pcb->pid) {
-                    k = 2;
-                } else if (cur->pcb->pid == totalPCB[2]->pcb->pid) {
-                    k = 0;
-                } 
-            }
-
-            if (k >= 0 && totalPCB[k] != NULL) {
-                for (int j = 0; j < c; j++) {
-                    if (k == j) {
-                        //printf("k = %i, j= %i\n", k, j);
-                        if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {
-                            load_page(totalPCB[j]->pcb->temp_size, totalPCB[j]->pcb->full_size, totalPCB[j], totalPCB[j]->pcb->pt[0]);
-                            if (c > 1) {
-                            skip = 1;
-                            cur = totalPCB[j];
-                            twice++;
-                            }
-                        } else {
-                            stillrunning = 0;
+            if (cur->pcb->temp_size < cur->pcb->full_size) {     
+                int lastused = 0;
+                PAGE* lastusedframe;
+                for (int j = 0; cur->pcb->pt[j]->loaded == 1; j++) {
+                    if (cur->pcb->pt[j]->executed == 1) {
+                        if (cur->pcb->pt[j]->last_used > lastused) {
+                            lastused = cur->pcb->pt[j]->last_used;
+                            lastusedframe = cur->pcb->pt[j];
                         }
                     }
                 }
+                load_page(cur->pcb->temp_size, cur->pcb->full_size, cur, lastusedframe);
+                stillrunning = 1;
+            } else {
+            stillrunning = 0;
             }
         }
     }
+    
     return 0;
 }
 
