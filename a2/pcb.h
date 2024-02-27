@@ -17,6 +17,7 @@ struct PAGE {
     int end;
     int loaded;
     int executed;
+    int last_used;
 };
 typedef struct
 {

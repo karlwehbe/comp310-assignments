@@ -33,7 +33,8 @@ void ready_queue_add_to_tail(QueueNode *node)
     }
     else{
         QueueNode *cur = head;
-        while(cur->next!=NULL) cur = cur->next;
+        while(cur->next!=NULL) 
+            cur = cur->next;
         cur->next = node;
         cur->next->next = NULL;
     }

@@ -39,6 +39,7 @@ PCB* makePCB(int start, int end, int acc_end, char* filename) {
             newPCB->pt[i]->end = (newstart + 2 <= end) ? newstart + 2 : end;
             newPCB->pt[i]->loaded = 1; 
             newPCB->pt[i]->executed = 0;
+            newPCB->pt[i]->last_used = 0;
 
             newstart += 3; 
             //printf("START = %i, END = %i, LOADED = %i\n", newPCB->pt[i]->start, newPCB->pt[i]->end, newPCB->pt[i]->loaded);
@@ -49,6 +50,7 @@ PCB* makePCB(int start, int end, int acc_end, char* filename) {
             newPCB->pt[i]->end = (newstart + 2 <= end) ? newstart + 2 : end;
             newPCB->pt[i]->loaded = 0; 
             newPCB->pt[i]->executed = 0;
+            newPCB->pt[i]->last_used = 0;
 
             newstart += 3; // Move to the next set of lines
             //printf("START = %i, END = %i, LOADED = %i\n",  newPCB->pt[i]->start, newPCB->pt[i]->end, newPCB->pt[i]->loaded);
