@@ -47,10 +47,12 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
 
     while ((line = calloc(1, 101)) != NULL && fgets(line, 101, file) != NULL && count < 4) {
         lineNo++;
-       // printf(" line = %s lineNo = %i, linesalread = %i and linestoread = %i and count == %i, index of new lines = %i and exists = %i\n", line, lineNo, lines_alr_read, lines_toread, count, index, exists(line));
+
         if (lineNo > lines_alr_read && count < lines_toread) {
-           if (memFullorNewStart() == -1 && freed == 0) {   // if memory full, we free
+           //printf(" line = %s lineNo = %i, linesalread = %i and linestoread = %i and count == %i, index of new lines = %i and exists = %i and memfull or new start = %i\n", line, lineNo, lines_alr_read, lines_toread, count, index, exists(line), memFullorNewStart());
+           if (memFullorNewStart() == -1 && freed == 0 && count == 0) {   // if memory full, we free
                 //printShellMemory();
+                //printf("line loaded before page fault : %s\n", line);
                 printf("Page fault! Victim page contents:\n");
                 for (int i = removefrom; i <= removeto; i++) {
                     printf("%s", mem_get_value_at_line(i));
@@ -62,17 +64,19 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
                 lastused->executed = 0;
                 lastused->start = 0;
                 lastused->last_used = 0;
+                //printf("remove from = %i, remove to = %i\n", removefrom, removeto);
            }
 
            if (freed == 1) {   // if freed, we reset used page 
                 count++;
                 linesread++;
+                //printf("\n currently putting the line : %s", line);
                 if (count > 1) {
-                    mem_set_line(filename, strdup(line), removefrom++);
+                    mem_set_line(filename, line, removefrom++);
                 } else 
-                    mem_set_line(filename, strdup(line), removefrom);
+                    mem_set_line(filename, line, removefrom);
                 index = getIndex(line);
-               // printf(" and index of tha line is %i\n", removefrom);
+                //printf(" and index of tha line is %i\n", removefrom);
                 free(line); 
 
             } else { // if not freed, we set memory to free page
@@ -210,7 +214,7 @@ int execute_process(QueueNode *node, int quanta){
         line = mem_get_value_at_line(pcb->PC++);
 
         //printf("\nline = %s", line);
-        //printf("\nPC = %i, and end of frame = %i\n", pcb->PC, pcb->end);
+        //printf("PC = %i, and end of frame = %i\n", pcb->PC, pcb->end);
 
         int index = getIndex(line);
         int framenumber;
@@ -261,9 +265,8 @@ int execute_process(QueueNode *node, int quanta){
 
            //printf("still here\n");
 
-        if (strcmp(line, "none") != 0) {
             parseInput(line);
-         }     
+             
 
             for (int j = 0; pcb->pt[j]->loaded == 1; j++) { //INCREMENTS EXECUTED PAGES EXCEPT THE ONE JUST USED.
                 if (pcb->pt[j]->executed == 1 && framenumber != j) {
@@ -291,9 +294,7 @@ int execute_process(QueueNode *node, int quanta){
             return 1;
         } 
         
-        if (strcmp(line, "none") != 0) {
-            parseInput(line);
-        }
+        parseInput(line);
         in_background = false;
     }
 
