@@ -190,14 +190,14 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 		while(i % 3 != 0) {
 			i++;
 		}
-		*pStart = (int)i;
+		*pStart = (int)i;	// IF NEXT FREE SLOT IS NOT A MULTIPLE OF 3, WE MAKE IT A MULT OF 3
 	} 
 
 	int linesRead;
 
 	int maxlines = 6;
 	
-    for (size_t j = i; (j < FRAMESIZE); j++){
+    for (size_t j = i; (j < FRAMESIZE); j++){	// CAN READ MAX 6 LINES FROM EACH PROGRAM
         if (feof(fp) || linesRead == maxlines)
         {	
             *pEnd = (int)j-1;
@@ -273,7 +273,7 @@ void *resetvariable(int index) {
 	}
 }
 
-int exists(char* variable) {
+int exists(char* variable) {		//CHECKS IF A LINE IS ALREADY IN MEMORY
 	for (int i = 0; i < FRAMESIZE; i++) {
 		if (strcmp(mem_get_value_at_line(i), variable) == 0) {
 			return i;
@@ -283,7 +283,7 @@ int exists(char* variable) {
 
 }
 
-int memFullorNewStart() {
+int memFullorNewStart() {	//CHECKS IF FRAME STORE IS FULL OR WHERE THE FIRST FREE PAGE IS.
 	int i;
 	for (i = 0; i < FRAMESIZE; i+=3) {
 		if (strcmp(mem_get_value_at_line(i), "none") == 0 && 
@@ -295,9 +295,9 @@ int memFullorNewStart() {
 	return -1;	
 }
 
-void mem_set_line(char* filename, char* line, int index) {
-	for (int i = index; i < index+3; i++) {
-		if (strcmp(mem_get_value_at_line(i), "none") == 0) {
+void mem_set_line(char* filename, char* line, int index) { // SETS A LINE AT A PARTICULAR INDEX
+	for (int i = index; i < index+3; i++) {					// IF THERE IS A LINES THERE
+		if (strcmp(mem_get_value_at_line(i), "none") == 0) {	// IT ADDS IT TO THE NEXT AVAILABLE SPOT
 			shellmemory[i].value = strndup(line, strlen(line));
 			shellmemory[i].var = filename;
 			if (strncmp(line, "set ", 4) == 0) {
@@ -311,7 +311,7 @@ void mem_set_line(char* filename, char* line, int index) {
 	
 }
 
-int getIndex(char* line) {
+int getIndex(char* line) {	// GET INDEX OF A LINE IN THE FRAME STORE
 	for (int i = 0; i < FRAMESIZE ; i++) {
 		if (strcmp(mem_get_value_at_line(i), line) == 0) {
 			return i;
@@ -319,7 +319,7 @@ int getIndex(char* line) {
 	}
 }
 
-int resetmem() {
+int resetmem() { // RESETS THE FRAME STORE 
 	for (int i = FRAMESIZE; i < SHELL_MEM_LENGTH; i++) {
 		if (strcmp(mem_get_value_at_line(i), "none") != 0) {
 			mem_set_value(getvariable(i), "none");

@@ -22,8 +22,8 @@ PCB* makePCB(int start, int end, int acc_end, char* filename) {
     newPCB->job_length_score = 1+end-start;
     newPCB->priority = false;
     newPCB->endof_file = acc_end;
-    newPCB->temp_size = ((end - start)/3) + 1;
-    newPCB->full_size = (acc_end - start)/3 + 1;
+    newPCB->temp_size = ((end - start)/3) + 1;      //CURRENT SIZE OF THE FILE / 2 AT THE START
+    newPCB->full_size = (acc_end - start)/3 + 1;    // SIZE OF THE FILE'S PAGE TABLE IF ALL LINES ARE READ
     newPCB->filename = filename;
 
     int numofpages =((end - start)/3) + 1;
@@ -31,7 +31,7 @@ PCB* makePCB(int start, int end, int acc_end, char* filename) {
     int newstart = start;
     int i = 0;
     
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 30; i++) {      // INITIALIZES THE PAGES OF THE PAGE TABLE
         if (i < numofpages) {
             newPCB->pt[i] = malloc(sizeof(PAGE));
 
@@ -42,7 +42,7 @@ PCB* makePCB(int start, int end, int acc_end, char* filename) {
             newPCB->pt[i]->last_used = 0;
 
             newstart += 3; 
-            //printf("START = %i, END = %i, LOADED = %i\n", newPCB->pt[i]->start, newPCB->pt[i]->end, newPCB->pt[i]->loaded);
+            printf("START = %i, END = %i, LOADED = %i\n", newPCB->pt[i]->start, newPCB->pt[i]->end, newPCB->pt[i]->loaded);
         } else {   
             newPCB->pt[i] = malloc(sizeof(PAGE));
 

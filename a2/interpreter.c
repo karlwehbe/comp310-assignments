@@ -143,7 +143,7 @@ int interpreter(char* command_args[], int args_size){
 	} else if (strcmp(command_args[0], "resetmem")==0) {
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		return resetmem();
-	} else if (strcmp(command_args[0], "mem")==0) {
+	} else if (strcmp(command_args[0], "mem")==0) {	// PRINTS THE SHELL MEMORY
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		printShellMemory();	
 	} 
@@ -285,9 +285,9 @@ int exec(char *fname1, char *fname2, char *fname3) {
 				return handle_error(error_code);
 			}
           
-            char* filename = loadtobs(filenames[i]); 
+            char* filename = loadtobs(filenames[i]); // LOADS TO BACKINGSTORE ORIGINAL FILE
                
-			error_code = process_initialize(filename);
+			error_code = process_initialize(filename); // THEN INITIALIZES PROCESS ON THE NEW FILE
 			if (error_code != 0) {
 				return handle_error(error_code);
 			}
@@ -303,8 +303,8 @@ int exec(char *fname1, char *fname2, char *fname3) {
 }
 
 
-char* loadtobs(char* filename) {
-	
+char* loadtobs(char* filename) { // LOADS A FILE INTO THE BACKINGSTORE WHILE CHANGING IT'S NAME TO MAKE IT UNIQUE
+								 // INCASE WE HAVE MULTIPLES FILES WITH THE SAME NAME
 	char uniqueFilename[100];
     char path[100];
     int uniqueId = 1; // Start with 1 to append to the filename
