@@ -261,7 +261,9 @@ int execute_process(QueueNode *node, int quanta){
 
            //printf("still here\n");
 
-            parseInput(line);       
+        if (strcmp(line, "none") != 0) {
+            parseInput(line);
+         }     
 
             for (int j = 0; pcb->pt[j]->loaded == 1; j++) { //INCREMENTS EXECUTED PAGES EXCEPT THE ONE JUST USED.
                 if (pcb->pt[j]->executed == 1 && framenumber != j) {
@@ -288,8 +290,10 @@ int execute_process(QueueNode *node, int quanta){
             in_background = false;    
             return 1;
         } 
-       
-        parseInput(line);
+        
+        if (strcmp(line, "none") != 0) {
+            parseInput(line);
+        }
         in_background = false;
     }
 
