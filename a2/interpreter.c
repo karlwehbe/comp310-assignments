@@ -146,8 +146,8 @@ int interpreter(char* command_args[], int args_size){
 	} else if (strcmp(command_args[0], "mem")==0) {	// PRINTS THE SHELL MEMORY
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		printShellMemory();	
-	} else if (strcmmp(command_args[0], "none") == 0) {
-		
+	} else if (strcmp(command_args[0], "none") == 0) {
+
 	}
 
 	return handle_error(BAD_COMMAND);
