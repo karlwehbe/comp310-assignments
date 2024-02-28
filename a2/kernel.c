@@ -43,62 +43,71 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
     fseek(file, 0, SEEK_SET);
 
     int removefrom = lastused->start;
-    int removeto = lastused->end + 1;
+    int removeto = lastused->end;
 
     while ((line = calloc(1, 101)) != NULL && fgets(line, 101, file) != NULL && count < 4) {
         lineNo++;
-        if (exists(line) != -1) {
-            linesread++;
-        }
-        //printf("lineNo = %i, linesalread = %i and linestoread = %i and count == %i, index of new lines = %i\n", lineNo, lines_alr_read, lines_toread, count, index);
-        if (lineNo > lines_alr_read && count < lines_toread && exists(line) == -1) {
+        //printf(" line = %s lineNo = %i, linesalread = %i and linestoread = %i and count == %i, index of new lines = %i and exists = %i\n", line, lineNo, lines_alr_read, lines_toread, count, index, exists(line));
+        if (lineNo > lines_alr_read && count < lines_toread) {
            if (memFullorNewStart() == -1 && freed == 0) {
+                //printShellMemory();
                 printf("Page fault! Victim page contents:\n");
-                for (int i = removefrom; i < removeto; i++) {
+                for (int i = removefrom; i <= removeto; i++) {
                     printf("%s", mem_get_value_at_line(i));
                 }
                 printf("End of victim page contents.\n");
                 mem_free_lines_between(removefrom, removeto);
                 freed = 1;
+           }
 
+            if (freed == 1) {
                 lastused->end = 0;
                 lastused->executed = 0;
                 lastused->start = 0;
                 lastused->last_used = 0;
-            }
-            //printf("\n currently putting the line : %s", line);
-            count++;
-            linesread++;
-            if (count > 1) {
-                mem_set_line(filename, line, index + 1);
-            } else 
-                mem_set_line(filename, line, memFullorNewStart());
-            index = getIndex(line);
-            //printf(" and index of tha line is %i\n", index);
-            free(line); 
-            } else {
+                count++;
+                linesread++;
+                if (count > 1) {
+                    mem_set_line(filename, line, removefrom++);
+                } else 
+                    mem_set_line(filename, line, removefrom);
+                index = getIndex(line);
+                //printf(" and index of tha line is %i\n", removefrom);
                 free(line); 
-                if (count >= lines_toread) break; 
+
+            } else {
+                //printf("\n currently putting the line : %s", line);
+                count++;
+                linesread++;
+                if (count > 1) {
+                    mem_set_line(filename, line, index + 1);
+                } else 
+                    mem_set_line(filename, line, memFullorNewStart());
+                index = getIndex(line);
+                //printf(" and index of tha line is %i\n", removefrom);
+                free(line); 
             } 
+        } else {
+            free(line); 
+            if (count >= lines_toread) break; 
+        } 
     }
 
     //printf("in loadpage : tempsize = %i and full size = %i\n", node->pcb->temp_size , node->pcb->full_size);
 
     if (freed == 1) {
         int k = 0;
-        for (int i = 0; i < node->pcb->full_size ; i++) {
-            if (node->pcb->pt[i]->loaded == 0) {
-                k = i;
-            }
+        while (node->pcb->pt[k]->loaded != 0) {
+            k++;
         }
-        node->pcb->pt[k]->end = count - 1;
-        node->pcb->pt[k]->start = 0;
+
+        node->pcb->pt[k]->end = removefrom;
+        node->pcb->pt[k]->start = removefrom - count + 1 ;
         node->pcb->pt[k]->loaded = 1;
         node->pcb->temp_size++; 
-        node->pcb->PC = 0;
-        //printf("k = %i, START = %i, END = %i and LOADED = %i\n", 0, node->pcb->pt[k]->start, node->pcb->pt[k]->end, node->pcb->pt[k]->loaded);
-        node->pcb->PC = 0;
-        node->pcb->end = count - 1;
+        node->pcb->PC = removefrom - count + 1;
+        //printf("k = %i, START = %i, END = %i and LOADED = %i\n\n\n", k, node->pcb->pt[k]->start, node->pcb->pt[k]->end, node->pcb->pt[k]->loaded);
+        node->pcb->end = removefrom ;
         //ready_queue_add_to_tail(node);
 
     } else {
@@ -200,8 +209,8 @@ int execute_process(QueueNode *node, int quanta){
     for(int i=0; i<quanta ; i++){
         line = mem_get_value_at_line(pcb->PC++);
 
-        //printf("line = %s\n", line);
-        //printf("PC = %i, and end of frame = %i\n", pcb->PC, pcb->end);
+        //printf("\nline = %s", line);
+        //printf("PC = %i, and end of frame = %i\n\n", pcb->PC, pcb->end);
 
         int index = getIndex(line);
         int framenumber;
@@ -433,14 +442,16 @@ void *scheduler_RR(void *arg){
                    }   
                 }
             }
-        
+            
+            //printf("will currently execute filename : %s\n", cur->pcb->filename);
             done = execute_process(cur, quanta);
-            //printf("done == %i\n", done);
+            //printf("done == %i\n\n", done);
         }
 
         //printf("done = %i\n", done);
         if(done == 0) {
             ready_queue_add_to_tail(cur);
+            skip = 0;
 
         } if (done == 1) {
             if (cur->next == NULL)
@@ -513,10 +524,13 @@ void *scheduler_RR(void *arg){
                             //printf("last used starts at : %i and end at %i\n", lastusedframe->start, lastusedframe->end);
                             load_page(totalPCB[j]->pcb->temp_size, totalPCB[j]->pcb->full_size, totalPCB[j], lastusedframe);
                             ready_queue_add_to_tail(totalPCB[j]);
+                            //printf("JUST FINISHED LOADING ANOTHER PAGE : %s\n", totalPCB[j]->pcb->filename);
                             loaded = 1;
                             if (c > 1 ){
                                 skip = 1;
                             }
+                        } else if (totalPCB[j]->pcb->temp_size == totalPCB[j]->pcb->full_size) {
+                            k++;
                         }
                     }
                 }
@@ -531,7 +545,7 @@ void *scheduler_RR(void *arg){
                 }
             }
 
-            //printf("over = %i, c = %i, loaded = %i\n", over, c, loaded);
+            //printf("over = %i, c = %i, loaded = %i\n\n\n", over, c, loaded);
             if (over == c && loaded == 0) {
                 if (cur->next) {
                     //printf("asdsadsa");
