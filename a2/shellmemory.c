@@ -253,10 +253,10 @@ char * mem_get_value_at_line(int index){
 void mem_free_lines_between(int start, int end){
 	for (int i=start; i<=end && i< (VARMEMSIZE + FRAMESIZE); i++){
 		if(shellmemory[i].var != NULL){
-			free(shellmemory[i].var);
+			shellmemory[i].var;
 		}	
 		if(shellmemory[i].value != NULL){
-			free(shellmemory[i].value);
+			shellmemory[i].value;
 		}	
 		shellmemory[i].var = "none";
 		shellmemory[i].value = "none";

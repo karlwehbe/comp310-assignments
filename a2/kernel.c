@@ -47,7 +47,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
 
     while ((line = calloc(1, 101)) != NULL && fgets(line, 101, file) != NULL && count < 4) {
         lineNo++;
-        //printf(" line = %s lineNo = %i, linesalread = %i and linestoread = %i and count == %i, index of new lines = %i and exists = %i\n", line, lineNo, lines_alr_read, lines_toread, count, index, exists(line));
+       // printf(" line = %s lineNo = %i, linesalread = %i and linestoread = %i and count == %i, index of new lines = %i and exists = %i\n", line, lineNo, lines_alr_read, lines_toread, count, index, exists(line));
         if (lineNo > lines_alr_read && count < lines_toread) {
            if (memFullorNewStart() == -1 && freed == 0) {   // if memory full, we free
                 //printShellMemory();
@@ -58,21 +58,21 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
                 printf("End of victim page contents.\n");
                 mem_free_lines_between(removefrom, removeto);
                 freed = 1;
-           }
-
-            if (freed == 1) {   // if freed, we reset used page 
                 lastused->end = 0;
                 lastused->executed = 0;
                 lastused->start = 0;
                 lastused->last_used = 0;
+           }
+
+           if (freed == 1) {   // if freed, we reset used page 
                 count++;
                 linesread++;
                 if (count > 1) {
-                    mem_set_line(filename, line, removefrom++);
+                    mem_set_line(filename, strdup(line), removefrom++);
                 } else 
-                    mem_set_line(filename, line, removefrom);
+                    mem_set_line(filename, strdup(line), removefrom);
                 index = getIndex(line);
-                //printf(" and index of tha line is %i\n", removefrom);
+               // printf(" and index of tha line is %i\n", removefrom);
                 free(line); 
 
             } else { // if not freed, we set memory to free page
@@ -210,7 +210,7 @@ int execute_process(QueueNode *node, int quanta){
         line = mem_get_value_at_line(pcb->PC++);
 
         //printf("\nline = %s", line);
-        printf("\nPC = %i, and end of frame = %i\n", pcb->PC, pcb->end);
+        //printf("\nPC = %i, and end of frame = %i\n", pcb->PC, pcb->end);
 
         int index = getIndex(line);
         int framenumber;
@@ -450,7 +450,7 @@ void *scheduler_RR(void *arg){
             
             //printf("will currently execute filename : %s\n", cur->pcb->filename);
             done = execute_process(cur, quanta);
-            printf("done == %i\n\n", done);
+            //printf("done == %i\n\n", done);
         }
 
         //printf("done = %i\n", done);
