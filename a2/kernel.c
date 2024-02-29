@@ -14,16 +14,40 @@
 bool active = false;
 bool debug = false;
 bool in_background = false;
+QueueNode *totalPCB[3] = {NULL, NULL, NULL}; // Assuming you want to track up to 3 PCBs
 
-void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused);
+
+
+
+PAGE *load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused);
 int memFullorNewStart();
 void mem_set_line(char* filename, char* line, int index);
 int getIndex(char* line);
+PAGE *find_last_used_page();
 
 
 
 
-void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
+PAGE *find_last_used_page() {  // No need to pass as argument now
+    int lastused = 0;
+    PAGE *lastusedframe = NULL;
+    int stillrunning = 1;
+    for (int i = 0; i < 3; i++) {   // Loop through the global totalPCB
+        for (int i = 0; i < 3; i++) {
+        totalPCB[i] = malloc(sizeof(QueueNode));
+        totalPCB[i]->next = NULL;
+        totalPCB[i]->pcb = NULL;
+    }
+    }
+    return lastusedframe;
+}
+
+
+
+
+
+
+PAGE *load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
 
     char* filename;
     filename = node->pcb->filename;
@@ -38,6 +62,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
     int index;
     int freed = 0;
     int lineNo = 0; 
+    PAGE* loadedpage = NULL;
     
 
     fseek(file, 0, SEEK_SET);
@@ -112,6 +137,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
         node->pcb->PC = removefrom - count + 1;
         //printf("k = %i, START = %i, END = %i and LOADED = %i\n\n\n", k, node->pcb->pt[k]->start, node->pcb->pt[k]->end, node->pcb->pt[k]->loaded);
         node->pcb->end = removefrom ;
+        loadedpage = node->pcb->pt[k];
         //ready_queue_add_to_tail(node);
 
     } else {        // IF NOT FREED, PAGE WILL TAKE PLACE OF INDEX AT WHICH IT WAS PLACED.
@@ -128,12 +154,15 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
         //printf("k = %i, START = %i, END = %i and LOADED = %i\n", i, node->pcb->pt[i]->start, node->pcb->pt[i]->end, node->pcb->pt[i]->loaded);
         node->pcb->PC = index - count + 1;
         node->pcb->end = index;
+        loadedpage = node->pcb->pt[i];
+
         //ready_queue_add_to_tail(node);
 
     }
 
     //printShellMemory();
     fclose(file);
+    return loadedpage;
 }
 
 
@@ -286,8 +315,19 @@ int execute_process(QueueNode *node, int quanta){
             }
 
             if (i == 1 && pcb->temp_size < pcb->full_size) {
-                // needs to load another page
-                // from same file
+                // Needs to load another page from the same file
+    int nextPageIndex = pcb->temp_size; // Assuming temp_size represents the number of pages currently loaded
+    PAGE *lastUsedPage = find_last_used_page();
+    PAGE *nextPage = load_page(pcb->temp_size, pcb->full_size, node, lastUsedPage); // Assuming lastUsedPage is a function that finds the last used page for this PCB
+    if (nextPage != NULL) { // Successfully loaded the new page
+        pcb->temp_size++; // Update the number of loaded pages
+        pcb->end = nextPage->end; // Update 'end' to reflect the new loaded page's ending line
+        pcb->pt[nextPageIndex] = nextPage; // Update PCB's page table
+    } else {
+        // Handle the case where the page couldn't be loaded
+        return 2; // Indicating a need for page loading but encountered an issue
+    }
+
             }
         
             in_background = false;    

@@ -2,6 +2,7 @@
 #define READY_QUEUE_H
 #include "pcb.h"
 #define MAX_INT 2147483646
+
 typedef struct QueueNode{
     PCB *pcb;
     struct QueueNode *next;
@@ -20,4 +21,5 @@ void sort_ready_queue();
 int ready_queue_get_shortest_job_score();
 void ready_queue_promote(int score);
 int present(char* filename) ;
+extern QueueNode *totalPCB[3]; // Extern keyword for global declaration
 #endif
