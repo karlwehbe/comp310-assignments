@@ -215,8 +215,8 @@ int execute_process(QueueNode *node, int quanta){
     for(i = 0 ; i<quanta ; i++){
         line = mem_get_value_at_line(pcb->PC++);
  
-        //printf("\nline = %s", line);
-        //printf("PC = %i, and end of frame = %i and i = %i\n", pcb->PC, pcb->end, i);
+       // printf("\nline = %s", line);
+       //printf("PC = %i, and end of frame = %i and i = %i\n", pcb->PC, pcb->end, i);
  
         int index = getIndex(line);
         int framenumber;
@@ -288,7 +288,7 @@ int execute_process(QueueNode *node, int quanta){
             }*/
  
           
-            if (i == 1 && (node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
+            if ((node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
                 return 2;
             }
  
