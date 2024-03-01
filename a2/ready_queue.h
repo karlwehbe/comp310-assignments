@@ -21,5 +21,5 @@ void sort_ready_queue();
 int ready_queue_get_shortest_job_score();
 void ready_queue_promote(int score);
 int present(char* filename) ;
-extern QueueNode *totalPCB[3]; // Extern keyword for global declaration
+
 #endif
