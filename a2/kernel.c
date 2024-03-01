@@ -204,7 +204,7 @@ int execute_process(QueueNode *node, int quanta){
         int index = getIndex(line);
         int framenumber;
  
-        if (quanta == MAX_INT) {
+        if (quanta == MAX_INT) {        // CHECKS HOW MANY LINES WE NEED TO PROCESS (DEPENDS ON SCHEDULER)
            for (int i = 0; pcb->pt[i]->loaded == 1; i++) {
                 if (pcb->pt[i]->start <= index && pcb->pt[i]->end >= index) {
                     framenumber = i;
@@ -222,7 +222,7 @@ int execute_process(QueueNode *node, int quanta){
             }   
         
         } else {
-            for (int z = 0; pcb->pt[z]->loaded == 1; z++) {
+            for (int z = 0; pcb->pt[z]->loaded == 1; z++) {     //GETS AT WHICH INDEX/PAGE IN THE PAGETABLE WE CURRENTLY ARE
                 if (pcb->pt[z]->start <= index && pcb->pt[z]->end >= index) {
                     framenumber = z;
                 }
@@ -248,7 +248,7 @@ int execute_process(QueueNode *node, int quanta){
  
             parseInput(line);
              
-            for (int j = 0; pcb->pt[j]->loaded == 1; j++) { //INCREMENTS EXECUTED PAGES EXCEPT THE ONE JUST USED.
+            for (int j = 0; pcb->pt[j]->loaded == 1; j++) { //INCREMENTS EXECUTED PAGES EXCEPT CURRENTLY BEING USED.
                 if (pcb->pt[j]->executed == 1 && framenumber != j) {
                     pcb->pt[j]->last_used++; 
                 }
@@ -259,11 +259,12 @@ int execute_process(QueueNode *node, int quanta){
                 small = 1;
             }
             
+            //CHECKS IF WE NEED TO LOAD MORE FILES.
             if ((i == 0 && pcb->temp_size < pcb->full_size) || (node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
                 if (i == 0) {
-                    return 4;
+                    return 4;   // RETURNS 4 IF WE ONLY PROCESSED 1 LINE AND THE OTHER ONE IS NOT IN MEMORY AND WE NEED TO LOAD A NEW PAGE
                 } else {
-                    return 2;
+                    return 2;   // RETURNS 2 IF WE PROCESSED 2 LINES AND WE NEED TO LOAD A NEW PAGE BECAUSE WE DIDN'T REACH THE FULL SIZE OF THE FILE.
                 }
             }
           
@@ -431,7 +432,7 @@ void *scheduler_RR(void *arg){
             done = execute_process(cur, quanta);
         }
  
-        if(done == 0) {     // IF PROGRAM IS STILL NOT DONE BUT ONLY 2 LINES WERE EXECUTED
+        if(done == 0) {     // IF PROGRAM IS STILL NOT DONE BUT ONLY 2 LINES WERE PROCESSED
             ready_queue_add_to_tail(cur);
             skip = 0;
  
@@ -446,7 +447,7 @@ void *scheduler_RR(void *arg){
             loaded = 0;
             
             int c = 0;
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 3; i++) {   //CHECKS TOTAL NUMBER OF FILES EXECUTED.
                 if (totalPCB[i] != NULL && totalPCB[i]->pcb != NULL) {
                     c = c+1; 
                 }
@@ -454,7 +455,7 @@ void *scheduler_RR(void *arg){
            
             int k = -1;
  
-            if (c == 1) {
+            if (c == 1) {       // JUMPS TO THE NEXT FILE THAT NEEDS TO BE PROCESSED.
                 k = 0;
             } else if (c == 2) {
                 if (cur->pcb->pid == totalPCB[0]->pcb->pid) {
@@ -478,7 +479,7 @@ void *scheduler_RR(void *arg){
                     if (k == j) {
                         cur = totalPCB[j];
                        
-                        if (done == 4){
+                        if (done == 4){     // IF DONE == 4, WE NEED TO LOAD A PAGE FROM THE CURRENT FILE WE JUST PROCESSED
                             if (j != 0) j = j -1;
                             if (j == 0) {
                                 if (c == 3){
@@ -517,14 +518,14 @@ void *scheduler_RR(void *arg){
                             if (c > 1 && done != 4){
                                 skip = 1;
                             }
-                        } else if (totalPCB[j]->pcb->temp_size == totalPCB[j]->pcb->full_size) {
-                            if (j == 2) {
+                         } else if (totalPCB[j]->pcb->temp_size == totalPCB[j]->pcb->full_size) { // IF A FILE IS ALREADY DONE RUNNING, WE SKIP TO NEXT ONE
+                            if (j == 2) {   
                                 k = 0;
                             } else {
                                 k++;
         
                             }
-                        } // IF A FILE IS ALREADY DONE RUNNING, WE SKIP TO NEXT ONE
+                        } 
                     }
                 }
             }

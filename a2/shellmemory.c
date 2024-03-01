@@ -189,7 +189,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 		while(i % 3 != 0) {
 			i++;
 		}
-		*pStart = (int)i;	// IF NEXT FREE SLOT IS NOT A MULTIPLE OF 3, WE MAKE IT A MULT OF 3
+		*pStart = (int)i;	// IF NEXT FREE SLOT IS NOT A MULTIPLE OF 3, MAKES IT A MULT OF 3
 	} 
 
 	int linesRead;
@@ -213,7 +213,7 @@ int load_file(FILE* fp, int* pStart, int* pEnd, char* filename) {
 			shellmemory[j].var = strdup(filename);
 			shellmemory[j].value = strndup(line, strlen(line));
 			linesRead++;
-			if (strncmp(line, "set ", 4) == 0) {
+			if (strncmp(line, "set ", 4) == 0) {		// IF LINE IS A SET COMMANDS, PUTS IT IN THE VARIABLE STORE
 				char val[150], var[150];
 				if (sscanf(line, "set %150s %150s", var, val) > 1)
 					mem_set_value(var, val);
@@ -291,7 +291,7 @@ int memFullorNewStart() {	//CHECKS IF FRAME STORE IS FULL OR WHERE THE FIRST FRE
 			return i;
 		}
 	}
-	return -1;	
+return -1;	// RETURNS -1 IF IS FULL;
 }
 
 void mem_set_line(char* filename, char* line, int index) { // SETS A LINE AT A PARTICULAR INDEX

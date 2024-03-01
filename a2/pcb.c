@@ -37,22 +37,20 @@ PCB* makePCB(int start, int end, int acc_end, char* filename) {
 
             newPCB->pt[i]->start = newstart;
             newPCB->pt[i]->end = newstart + 2;
-            newPCB->pt[i]->loaded = 1; 
+            newPCB->pt[i]->loaded = 1;          // LOADED INDICATES THAT A PAGE IS CURRENTLY PRESENT AT THIS INDEX
             newPCB->pt[i]->executed = 0;
             newPCB->pt[i]->last_used = 0;
 
             newstart += 3; 
        
         } else {   
-            newPCB->pt[i] = malloc(sizeof(PAGE));
+            newPCB->pt[i] = malloc(sizeof(PAGE));       // INITIALIZES THE REST OF THE UNUSED PAGE TABLES
 
-            newPCB->pt[i]->start = newstart;
-            newPCB->pt[i]->end = newstart + 2;
+            newPCB->pt[i]->start = 0;
+            newPCB->pt[i]->end = 0;
             newPCB->pt[i]->loaded = 0; 
             newPCB->pt[i]->executed = 0;
             newPCB->pt[i]->last_used = 0;
-
-            newstart += 3; 
         }
     }
 
