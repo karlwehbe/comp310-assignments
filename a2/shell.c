@@ -23,14 +23,14 @@ int main(int argc, char *argv[]) {
     //backing store goes here
     
     chdir("/code");
-    if (chdir("backingstore") == 0) {
-        chdir("..");
+    if (chdir("backingstore") == 0) {   //CHECKS IF BACKINGSTORE IS PRESENT
+        chdir("..");                    // IF PRESENT, WE GO BACK TO /CODE
         system("rm -r backingstore"); 
     }
-    system("mkdir backingstore");
+    system("mkdir backingstore");   //MAKES THE BACKINGSTORE IN BOTH CASES  
   
-    int fsize = FRAMESIZE;
-    int memsize = VARMEMSIZE;
+    int fsize = FRAMESIZE;      // FRAMESIZE INPUT VALUE IN THE MAKEFILE
+    int memsize = VARMEMSIZE;   // VARMEMSIZE INPUT VALUE IN THE MAKEFILE
 	printf("%s\n", "Shell v2.0\n");
     printf("Frame Store Size = %i; Variable Store Size = %i\n", fsize, memsize);	
     

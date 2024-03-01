@@ -67,7 +67,6 @@ void mem_init(){
 // Set key value pair
 void mem_set_value(char *var_in, char *value_in) {
 	int i;
-	//printf("fsize, %i, var size = %i\n", FRAMESIZE, SHELL_MEM_LENGTH);
 	for (i=FRAMESIZE; i<SHELL_MEM_LENGTH; i++){
 		if (strcmp(shellmemory[i].var, var_in) == 0){
 			shellmemory[i].value = strdup(value_in);

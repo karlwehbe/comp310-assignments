@@ -146,9 +146,7 @@ int interpreter(char* command_args[], int args_size){
 	} else if (strcmp(command_args[0], "mem")==0) {	// PRINTS THE SHELL MEMORY
 		if (args_size > 1) return handle_error(TOO_MANY_TOKENS);
 		printShellMemory();	
-	} else if (strcmp(command_args[0], "none") == 0) {
-
-	}
+	} 
 
 	return handle_error(BAD_COMMAND);
 	
@@ -171,7 +169,7 @@ int quit(){
 	ready_queue_destory();
 
     if (chdir("/code") == 0) {	
-		if (chdir("backingstore") == 0) {
+		if (chdir("backingstore") == 0) {	// IF BACKINGSTORE EXISTS, REMOVES IT
 			chdir("..");
 			system("rm -r backingstore");	
 		} 
@@ -262,8 +260,8 @@ int run(char* script){
 			errCode = 2;
 			return handle_error(errCode);
 		}
-		char* filename = loadtobs(script); 
-		errCode = process_initialize(filename);
+		char* filename = loadtobs(script); //LOADS FILE TO BACKINGSTORE
+		errCode = process_initialize(filename);	
 		if (errCode != 0) {
 			return handle_error(errCode);
 		}
@@ -319,12 +317,12 @@ char* loadtobs(char* filename) { // LOADS A FILE INTO THE BACKINGSTORE WHILE CHA
         snprintf(path, sizeof(path), "backingstore/%s", uniqueFilename);
     }
 
-    char copyCommand[100];
-    snprintf(copyCommand, sizeof(copyCommand),"cp %s backingstore \n", filename); 
+    char copyCommand[100];		
+    snprintf(copyCommand, sizeof(copyCommand),"cp %s backingstore \n", filename); // COPY ORIGINAL FILE TO BACKING STORE
     system(copyCommand);
 
     char moveCommand[100];
-    snprintf(moveCommand, sizeof(moveCommand), "mv backingstore/%s %s", filename, path);
+    snprintf(moveCommand, sizeof(moveCommand), "mv backingstore/%s %s", filename, path); //CHANGE THE NAME OF THE FILE TO MAKE IT UNIQUE
     system(moveCommand);
 
     size_t scriptsize = strlen("backingstore/") + strlen(uniqueFilename) + 1; 
@@ -339,7 +337,7 @@ char* loadtobs(char* filename) { // LOADS A FILE INTO THE BACKINGSTORE WHILE CHA
 
 
 	
-int fileExists(char *path) {
+int fileExists(char *path) {	// CHECKS IF A FILE EXISTS
     FILE *file = fopen(path, "r");
     if (file) {
         fclose(file); 

@@ -51,10 +51,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
         lineNo++;
  
         if (lineNo > lines_alr_read && count < lines_toread) {
-           //printf(" line = %s lineNo = %i, linesalread = %i and linestoread = %i and count == %i, index of new lines = %i and exists = %i and memfull or new start = %i\n", line, lineNo, lines_alr_read, lines_toread, count, index, exists(line), memFullorNewStart());
            if (memFullorNewStart() == -1 && freed == 0 && count == 0) {   // if memory full, we free
-                //printShellMemory();
-                //printf("line loaded before page fault : %s\n", line);
                 printf("Page fault! Victim page contents:\n");
                 for (int i = removefrom; i <= removeto; i++) {
                     printf("%s", mem_get_value_at_line(i));
@@ -66,23 +63,19 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
                 lastused->executed = 0;
                 lastused->start = 0;
                 lastused->last_used = 0;
-                //printf("remove from = %i, remove to = %i\n", removefrom, removeto);
            }
  
            if (freed == 1) {   // if freed, we reset used page 
                 count++;
                 linesread++;
-                //printf("\n currently putting the line : %s", line);
                 if (count > 1) {
                     mem_set_line(filename, line, removefrom++);
                 } else 
                     mem_set_line(filename, line, removefrom);
                 index = getIndex(line);
-                //printf(" and index of tha line is %i\n", removefrom);
                 free(line); 
  
             } else { // if not freed, we set memory to free page
-                //printf("\n currently putting the line : %s", line);
                 count++;
                 linesread++;
                 if (count > 1) {
@@ -90,7 +83,6 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
                 } else 
                     mem_set_line(filename, line, memFullorNewStart());
                 index = getIndex(line);
-                //printf(" and index of tha line is %i\n", removefrom);
                 free(line); 
             } 
         } else {
@@ -98,8 +90,6 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
             if (count >= lines_toread) break; 
         } 
     }
- 
-    //printf("in loadpage : tempsize = %i and full size = %i\n", node->pcb->temp_size , node->pcb->full_size);
  
     if (freed == 1) {       // IF WE FREED, PAGE WILL TAKE PLACE OF VICTIM CONTENT
         int k = 0;
@@ -112,9 +102,7 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
         node->pcb->pt[k]->loaded = 1;
         node->pcb->temp_size++; 
         node->pcb->PC = removefrom - count + 1;
-        //printf("k = %i, START = %i, END = %i and LOADED = %i\n\n\n", k, node->pcb->pt[k]->start, node->pcb->pt[k]->end, node->pcb->pt[k]->loaded);
         node->pcb->end = removefrom ;
-        //ready_queue_add_to_tail(node);
  
     } else {        // IF NOT FREED, PAGE WILL TAKE PLACE OF INDEX AT WHICH IT WAS PLACED.
         
@@ -127,18 +115,15 @@ void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused) {
         node->pcb->pt[i]->start = index - count + 1;
         node->pcb->pt[i]->loaded = 1;
         node->pcb->temp_size++;
-        //printf("k = %i, START = %i, END = %i and LOADED = %i\n", i, node->pcb->pt[i]->start, node->pcb->pt[i]->end, node->pcb->pt[i]->loaded);
         node->pcb->PC = index - count + 1;
         node->pcb->end = index;
-        //ready_queue_add_to_tail(node);
- 
     }
  
-    //printShellMemory();
     fclose(file);
 }
  
  
+
 int process_initialize(char *filename){
     FILE* fp;
     int* start = (int*)malloc(sizeof(int));
@@ -162,7 +147,7 @@ int process_initialize(char *filename){
     while(!feof(file)) {
         ch = fgetc(file);
         if(ch == '\n') {
-            lines++;
+            lines++;           // calculates the total number of lines in all of the file
         }
     }
     if (ch != '\n' && lines != 0) lines++;
@@ -170,7 +155,6 @@ int process_initialize(char *filename){
  
     int newend = *start + (lines-1) ;
  
-    //printf("\nFilename = %s and start = %i and end = %i but acc end = %i\n", filename, *start, *end, newend);
     if(error_code != 0){
         fclose(fp);
         return FILE_ERROR;
@@ -184,6 +168,7 @@ int process_initialize(char *filename){
         
 }
  
+
 int shell_process_initialize(){
     //Note that "You can assume that the # option will only be used in batch mode."
     //So we know that the input is a file, we can directly load the file into ram
@@ -215,8 +200,6 @@ int execute_process(QueueNode *node, int quanta){
     for(i = 0 ; i<quanta ; i++){
         line = mem_get_value_at_line(pcb->PC++);
  
-       //printf("\nline = %s", line);
-       //printf("PC = %i, and end of frame = %i and i = %i\n", pcb->PC, pcb->end, i);
  
         int index = getIndex(line);
         int framenumber;
@@ -263,24 +246,19 @@ int execute_process(QueueNode *node, int quanta){
  
         if(pcb->PC > pcb->end){
  
- 
             parseInput(line);
              
- 
             for (int j = 0; pcb->pt[j]->loaded == 1; j++) { //INCREMENTS EXECUTED PAGES EXCEPT THE ONE JUST USED.
                 if (pcb->pt[j]->executed == 1 && framenumber != j) {
                     pcb->pt[j]->last_used++; 
                 }
             }  
  
- 
             int small = 0;
             if (strcmp(getvariable(5), "none") == 0) {
                 small = 1;
             }
             
-           //printf("tempsize = %i and full size = %i\n", node->pcb->temp_size , node->pcb->full_size);
-  
             if ((i == 0 && pcb->temp_size < pcb->full_size) || (node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
                 if (i == 0) {
                     return 4;
@@ -288,9 +266,7 @@ int execute_process(QueueNode *node, int quanta){
                     return 2;
                 }
             }
- 
           
-        
             in_background = false;    
             return 1;
         }
@@ -299,7 +275,6 @@ int execute_process(QueueNode *node, int quanta){
         in_background = false;
     }
  
-    //printf("next filename : %s\n", node->next->pcb->filename);
     return 0;
 }
  
@@ -448,15 +423,12 @@ void *scheduler_RR(void *arg){
                    for (int j = 0; totalPCB[i]->pcb->pt[j]->loaded == 1; j++) {
                         if (totalPCB[i]->pcb->pt[j]->executed == 1) {
                            totalPCB[i]->pcb->pt[j]->last_used++; 
-                            //printf("IN RR SCHEDULER : for filename %s and pcbid %i, im currently in framenumber %i and lastused = %i\n",totalPCB[i]->pcb->filename, totalPCB[i]->pcb->pid, j, totalPCB[i]->pcb->pt[j]->last_used);
                         }
                    }   
                 }
             }
             
-            //printf("will currently execute filename : %s\n", cur->pcb->filename);
             done = execute_process(cur, quanta);
-            //printf("done == %i\n\n", done);
         }
  
         if(done == 0) {     // IF PROGRAM IS STILL NOT DONE BUT ONLY 2 LINES WERE EXECUTED
@@ -476,7 +448,6 @@ void *scheduler_RR(void *arg){
             int c = 0;
             for (int i = 0; i < 3; i++) {
                 if (totalPCB[i] != NULL && totalPCB[i]->pcb != NULL) {
-                    //printf("PCB %i Filename: %s\n", i, totalPCB[i]->pcb->filename);  
                     c = c+1; 
                 }
             }
@@ -519,9 +490,7 @@ void *scheduler_RR(void *arg){
                                 }
                             }
                         }
-                        //printf("k = %i, j= %i\n", k, j);
-                        //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
-                        //printf("cur filename == %s\n", cur->pcb->filename);
+
                         if (present(cur->pcb->filename) && done != 4) {
                             skip = 0;
                         }
@@ -536,18 +505,14 @@ void *scheduler_RR(void *arg){
                                             if (totalPCB[i]->pcb->pt[z]->last_used > lastused) {
                                                 lastused = totalPCB[i]->pcb->pt[z]->last_used;
                                                 lastusedframe = totalPCB[i]->pcb->pt[z];
-                                                //printf("filename = %s and frame# = %i\n", totalPCB[i]->pcb->filename, j);
                                             }
                                         }
                                    }
                                 }
                             } 
  
-                            //printf("last used = == %i\n", lastused);
-                            //printf("last used starts at : %i and end at %i\n", lastusedframe->start, lastusedframe->end);
                             load_page(totalPCB[j]->pcb->temp_size, totalPCB[j]->pcb->full_size, totalPCB[j], lastusedframe);  //LOADS A NEW PAGE
                             ready_queue_add_to_tail(totalPCB[j]);   // ADDS LOADED PAGE TO QUEUE
-                            //printf("JUST FINISHED LOADING ANOTHER PAGE : %s\n", totalPCB[j]->pcb->filename);
                             loaded = 1;
                             if (c > 1 && done != 4){
                                 skip = 1;
@@ -567,22 +532,18 @@ void *scheduler_RR(void *arg){
             
             int over = 0;
             for (int j = 0; j < c; j++) {   //CHECK TO SEE IF ALL PROGRAMS REACHED THEIR MAXIMUM SIZE/ ALL THEIR LINES READ
-                //printf("tempsize = %i and full size = %i \n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
                 if (totalPCB[j]->pcb->temp_size == totalPCB[j]->pcb->full_size) {   
                     over++;
                 }
             }
  
-            //printf("over = %i, c = %i, loaded = %i\n\n\n", over, c, loaded);
             if (over == c && loaded == 0) {     // IF ALL PROGRAMS REACHED THEIR END GOAL/ WE'RE DONE
                 if (cur->next) {                // AND WE ALSO DIDN'T JUST LOAD A FILE
-                    //printf("asdsadsa");
                     stillrunning = 1;
                 } else {
                     stillrunning = 0;
                 }
             } else if (over == c && loaded == 1) { //ELSE IF A FILE HAS BEEN LOADED, AND ALL FILES REACHED MAX SIZE
-                //printf("im here");               // WE STILL NEED TO EXECUTE IT BEFORE WE END.
                 stillrunning = 1;    
                 skip = 0;
             }

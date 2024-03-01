@@ -185,7 +185,7 @@ void ready_queue_promote(int score){
     head = next;
 }
 
-int present(char* filename) {
+int present(char* filename) {   // CHECKS IF A FILE/PCB IS PRESENT IN QUEUE
     QueueNode *cur  = head;
      while(cur!=NULL){
         if (strcmp(cur->pcb->filename, filename) ==0) {
