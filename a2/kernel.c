@@ -283,9 +283,9 @@ int execute_process(QueueNode *node, int quanta){
                 small = 1;
             }
             
-            /*if (i == 0 && pcb->full_size > pcb->temp_size) {
+            if (i == 0 && pcb->full_size > pcb->temp_size) {
                 return 4;
-            }*/
+            }
  
           
             if ((node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
@@ -473,7 +473,7 @@ void *scheduler_RR(void *arg){
             if (cur->next != NULL)
                 stillrunning = 1;
  
-        } else if (done == 2) { // IF WE NEED TO LOAD ANOTHER PAGE
+        } else if (done % 2 == 0 && done != 0) { // IF WE NEED TO LOAD ANOTHER PAGE
  
             loaded = 0;
             
@@ -511,14 +511,14 @@ void *scheduler_RR(void *arg){
                     if (k == j) {
                         cur = totalPCB[j];
                        
-                        /*if (done == 4 && skip == 0){
+                        if (done == 4 && skip == 0){
                             if (j != 0) j = j -1;
                             if (j == 0) j = 2;
-                        }*/
+                        }
                         //printf("k = %i, j= %i\n", k, j);
                         //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
                         //printf("cur filename == %s\n", cur->pcb->filename);
-                        if (present(cur->pcb->filename)) {
+                        if (present(cur->pcb->filename) && done != 4) {
                             skip = 0;
                         }
                         else if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {  
@@ -545,7 +545,7 @@ void *scheduler_RR(void *arg){
                             ready_queue_add_to_tail(totalPCB[j]);   // ADDS LOADED PAGE TO QUEUE
                             //printf("JUST FINISHED LOADING ANOTHER PAGE : %s\n", totalPCB[j]->pcb->filename);
                             loaded = 1;
-                            if (c > 1){
+                            if (c > 1 && done != 4){
                                 skip = 1;
                             }
                         } else if (totalPCB[j]->pcb->temp_size == totalPCB[j]->pcb->full_size) {
