@@ -15,6 +15,8 @@ bool active = false;
 bool debug = false;
 bool in_background = false;
 
+
+
 void load_page(int recentsize, int finalsize, QueueNode* node, PAGE* lastused);
 int memFullorNewStart();
 void mem_set_line(char* filename, char* line, int index);
@@ -209,12 +211,12 @@ int execute_process(QueueNode *node, int quanta){
     PCB *pcb = node->pcb;
     int end;
 
-    
-    for(int i=0; i<quanta ; i++){
+    int i;
+    for(i = 0 ; i<quanta ; i++){
         line = mem_get_value_at_line(pcb->PC++);
 
         //printf("\nline = %s", line);
-        //printf("PC = %i, and end of frame = %i\n", pcb->PC, pcb->end);
+        //printf("PC = %i, and end of frame = %i and i = %i\n", pcb->PC, pcb->end, i);
 
         int index = getIndex(line);
         int framenumber;
@@ -227,27 +229,27 @@ int execute_process(QueueNode *node, int quanta){
             }   
 
             if (pcb->pt[framenumber]->end == pcb->PC-1) {
-                for (int i = 0; pcb->pt[i]->loaded == 1; i++) {
-                    if (i == framenumber) {    
-                        pcb->pt[i]->executed = 1;
+                for (int k = 0; pcb->pt[k]->loaded == 1; k++) {
+                    if (k == framenumber) {    
+                        pcb->pt[k]->executed = 1;
                         //printf("before parse : for filename %s and pcbid %i, im currently in framenumber %i\n", pcb->filename, pcb->pid, i);
                     } else {
-                        pcb->pt[i]->last_used++;
+                        pcb->pt[k]->last_used++;
                     } 
                 }
             }   
         
         } else {
-            for (int i = 0; pcb->pt[i]->loaded == 1; i++) {
-                if (pcb->pt[i]->start <= index && pcb->pt[i]->end >= index) {
-                    framenumber = i;
+            for (int z = 0; pcb->pt[z]->loaded == 1; z++) {
+                if (pcb->pt[z]->start <= index && pcb->pt[z]->end >= index) {
+                    framenumber = z;
                 }
             }   
 
             if (pcb->pt[framenumber]->end == pcb->PC-1) {     // MAKES A PAGE "EXECUTED" IF WE REACH END OF PAGE
-                for (int i = 0; pcb->pt[i]->loaded == 1; i++) {
-                    if (i == framenumber) {    
-                        pcb->pt[i]->executed = 1;
+                for (int q = 0; pcb->pt[q]->loaded == 1; q++) {
+                    if (q == framenumber) {    
+                        pcb->pt[q]->executed = 1;
                         //printf("for filename %s and pcbid %i, im currently in framenumber %i\n", pcb->filename, pcb->pid, i);
                     } 
                 }
@@ -281,19 +283,21 @@ int execute_process(QueueNode *node, int quanta){
                 small = 1;
             }
             
-            if ((node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
+            if (i == 0 && pcb->full_size > pcb->temp_size) {
+                return 4;
+            }
+
+          
+            if (i == 1 && (node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
                 return 2;
             }
 
-            if (i == 1 && pcb->temp_size < pcb->full_size) {
-                // needs to load another page
-                // from same file
-            }
+          
         
             in_background = false;    
             return 1;
-        } 
-        
+        }
+
         parseInput(line);
         in_background = false;
     }
@@ -469,7 +473,7 @@ void *scheduler_RR(void *arg){
             if (cur->next != NULL)
                 stillrunning = 1;
 
-        } else if (done == 2) { // IF WE NEED TO LOAD ANOTHER PAGE
+        } else if (done % 2 == 0) { // IF WE NEED TO LOAD ANOTHER PAGE
 
             loaded = 0;
             
@@ -506,10 +510,15 @@ void *scheduler_RR(void *arg){
                 for (int j = 0; j < c; j++) {
                     if (k == j) {
                         cur = totalPCB[j];
+                       
+                        if (done == 4 && skip == 0){
+                            if (j != 0) j = j -1;
+                            if (j == 0) j = 2;
+                        }
                         //printf("k = %i, j= %i\n", k, j);
                         //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
                         //printf("cur filename == %s\n", cur->pcb->filename);
-                        if (present(cur->pcb->filename)) {
+                        if (present(cur->pcb->filename) && done != 4) {
                             skip = 0;
                         }
                         else if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {  
@@ -518,11 +527,11 @@ void *scheduler_RR(void *arg){
 
                             for (int i = 0; i < 3; i++) {   // CODE TO IDENTIDY LRU PAGE
                                 if (totalPCB[i] != NULL && totalPCB[i]->pcb != NULL) {
-                                    for (int j = 0; totalPCB[i]->pcb->pt[j]->loaded == 1; j++) {
-                                        if (totalPCB[i]->pcb->pt[j]->executed == 1) {
-                                            if (totalPCB[i]->pcb->pt[j]->last_used > lastused) {
-                                                lastused = totalPCB[i]->pcb->pt[j]->last_used;
-                                                lastusedframe = totalPCB[i]->pcb->pt[j];
+                                    for (int z = 0; totalPCB[i]->pcb->pt[z]->loaded == 1; z++) {
+                                        if (totalPCB[i]->pcb->pt[z]->executed == 1) {
+                                            if (totalPCB[i]->pcb->pt[z]->last_used > lastused) {
+                                                lastused = totalPCB[i]->pcb->pt[z]->last_used;
+                                                lastusedframe = totalPCB[i]->pcb->pt[z];
                                                 //printf("filename = %s and frame# = %i\n", totalPCB[i]->pcb->filename, j);
                                             }
                                         }
@@ -536,7 +545,7 @@ void *scheduler_RR(void *arg){
                             ready_queue_add_to_tail(totalPCB[j]);   // ADDS LOADED PAGE TO QUEUE
                             //printf("JUST FINISHED LOADING ANOTHER PAGE : %s\n", totalPCB[j]->pcb->filename);
                             loaded = 1;
-                            if (c > 1 ){
+                            if (c > 1 && done != 4){
                                 skip = 1;
                             }
                         } else if (totalPCB[j]->pcb->temp_size == totalPCB[j]->pcb->full_size) {
@@ -544,6 +553,7 @@ void *scheduler_RR(void *arg){
                                 k = 0;
                             } else {
                                 k++;
+                                j++;
                             }
                         } // IF A FILE IS ALREADY DONE RUNNING, WE SKIP TO NEXT ONE
                     }
