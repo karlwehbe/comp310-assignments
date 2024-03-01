@@ -518,7 +518,7 @@ void *scheduler_RR(void *arg){
                         //printf("k = %i, j= %i\n", k, j);
                         //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
                         //printf("cur filename == %s\n", cur->pcb->filename);
-                        if (present(cur->pcb->filename)) {
+                        if (present(cur->pcb->filename) && done != 4) {
                             skip = 0;
                         }
                         else if (totalPCB[j]->pcb->temp_size < totalPCB[j]->pcb->full_size) {  
@@ -553,7 +553,7 @@ void *scheduler_RR(void *arg){
                                 k = 0;
                             } else {
                                 k++;
-                                j++;
+        
                             }
                         } // IF A FILE IS ALREADY DONE RUNNING, WE SKIP TO NEXT ONE
                     }
