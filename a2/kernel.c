@@ -215,7 +215,7 @@ int execute_process(QueueNode *node, int quanta){
     for(i = 0 ; i<quanta ; i++){
         line = mem_get_value_at_line(pcb->PC++);
  
-       // printf("\nline = %s", line);
+       //printf("\nline = %s", line);
        //printf("PC = %i, and end of frame = %i and i = %i\n", pcb->PC, pcb->end, i);
  
         int index = getIndex(line);
@@ -232,7 +232,6 @@ int execute_process(QueueNode *node, int quanta){
                 for (int k = 0; pcb->pt[k]->loaded == 1; k++) {
                     if (k == framenumber) {    
                         pcb->pt[k]->executed = 1;
-                        //printf("before parse : for filename %s and pcbid %i, im currently in framenumber %i\n", pcb->filename, pcb->pid, i);
                     } else {
                         pcb->pt[k]->last_used++;
                     } 
@@ -250,7 +249,6 @@ int execute_process(QueueNode *node, int quanta){
                 for (int q = 0; pcb->pt[q]->loaded == 1; q++) {
                     if (q == framenumber) {    
                         pcb->pt[q]->executed = 1;
-                        //printf("for filename %s and pcbid %i, im currently in framenumber %i\n", pcb->filename, pcb->pid, i);
                     } 
                 }
             }  
@@ -265,7 +263,6 @@ int execute_process(QueueNode *node, int quanta){
  
         if(pcb->PC > pcb->end){
  
-           //printf("still here\n");
  
             parseInput(line);
              
@@ -273,7 +270,6 @@ int execute_process(QueueNode *node, int quanta){
             for (int j = 0; pcb->pt[j]->loaded == 1; j++) { //INCREMENTS EXECUTED PAGES EXCEPT THE ONE JUST USED.
                 if (pcb->pt[j]->executed == 1 && framenumber != j) {
                     pcb->pt[j]->last_used++; 
-                    //printf("for filename %s and pcbid %i, im currently in framenumber %i and lastused = %i\n",pcb->filename, pcb->pid, j, pcb->pt[j]->last_used);
                 }
             }  
  
@@ -283,13 +279,14 @@ int execute_process(QueueNode *node, int quanta){
                 small = 1;
             }
             
-            if (i == 0 && pcb->full_size > pcb->temp_size) {
-                return 4;
-            }
- 
-          
-            if ((node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
-                return 2;
+           //printf("tempsize = %i and full size = %i\n", node->pcb->temp_size , node->pcb->full_size);
+  
+            if ((i == 0 && pcb->temp_size < pcb->full_size) || (node->next == NULL && pcb->temp_size < pcb->full_size) || (!small && node->next == NULL && pcb->temp_size == pcb->full_size)) {
+                if (i == 0) {
+                    return 4;
+                } else {
+                    return 2;
+                }
             }
  
           
@@ -462,7 +459,6 @@ void *scheduler_RR(void *arg){
             //printf("done == %i\n\n", done);
         }
  
-        //printf("done = %i\n", done);
         if(done == 0) {     // IF PROGRAM IS STILL NOT DONE BUT ONLY 2 LINES WERE EXECUTED
             ready_queue_add_to_tail(cur);
             skip = 0;
@@ -511,9 +507,17 @@ void *scheduler_RR(void *arg){
                     if (k == j) {
                         cur = totalPCB[j];
                        
-                        if (done == 4 && skip == 0){
+                        if (done == 4){
                             if (j != 0) j = j -1;
-                            if (j == 0) j = 2;
+                            if (j == 0) {
+                                if (c == 3){
+                                    j = 2;
+                                } else if (c == 2){
+                                    j = 0;
+                                } else {
+                                    j = 0;
+                                }
+                            }
                         }
                         //printf("k = %i, j= %i\n", k, j);
                         //printf("tempsize = %i and full size = %i\n", totalPCB[j]->pcb->temp_size , totalPCB[j]->pcb->full_size);
