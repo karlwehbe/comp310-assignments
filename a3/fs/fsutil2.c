@@ -14,18 +14,98 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+
 int copy_in(char *fname) {
-  // TODO
-  return 0;
+
+    // still need to add extreme cases, if no space in memory
+    FILE *source;
+    long fileSize;
+    int bytesWritten = 0;
+
+
+    source = fopen(fname, "r");
+    if (!source) return 1;
+
+    fseek(source, 0, SEEK_END);
+    fileSize = ftell(source);
+    rewind(source);
+    
+    int res = fsutil_create(fname, fileSize); 
+    int spaceavailable = fsutil_freespace();
+
+    if (res == 1 && !(spaceavailable < 2)) {
+        char buffer[1024]; 
+        int bytesRead = 0;
+        while ((bytesRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
+            int writeResult = fsutil_write(fname, buffer, bytesRead);
+            bytesWritten += writeResult;
+            if (writeResult < bytesRead) {
+                printf("Warning: could only write %d out of %ld bytes (reached end of file)\n", bytesWritten, fileSize);
+                break; 
+            }
+        }
+
+        fclose(source);
+
+        if (bytesWritten < fileSize) {
+            return 3;
+        } else {
+            return 0;
+        }
+    } else {
+      return 2;
+    }
 }
 
 int copy_out(char *fname) {
-  // TODO
-  return 0;
+
+    int size = fsutil_size(fname);
+    char* buffer =  malloc((size+1) * sizeof(char));
+    memset(buffer, 0, size + 1);
+
+    struct file *f = get_file_by_fname(fname);
+    int offset = file_tell(f);
+
+    fsutil_seek(fname, 0);
+    fsutil_read(fname, buffer, size);
+
+    FILE* file = fopen(fname, "w");
+    if (file == NULL) {
+      fsutil_seek(fname, offset);    // take pointer back to original place.
+      return 1;
+    }
+    fputs(buffer, file);
+    fclose(file);
+    
+    fsutil_seek(fname, offset);    // take pointer back to original place.
+    return 0;
 }
 
 void find_file(char *pattern) {
-  // TODO
+  struct dir *dir;
+  char name[NAME_MAX + 1];
+
+  dir = dir_open_root();
+  if (dir == NULL)
+    return ;
+
+  while (dir_readdir(dir, name)) {
+
+    int size = fsutil_size(name);
+    char* buffer =  malloc((size+1) * sizeof(char));
+    memset(buffer, 0, size + 1);
+    fsutil_read(name, buffer, size);
+
+    fsutil_seek(name, 0);
+    fsutil_read(name, buffer, size);
+
+    if (strstr(buffer, pattern)) {
+        printf("%s\n", name);
+    }
+  }
+
+  dir_close(dir);
   return;
 }
 

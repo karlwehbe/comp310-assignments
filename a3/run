@@ -1,0 +1,6 @@
+#bin/bash/!
+
+make clean
+make myshell framesize=24 varmemsize=1000
+
+./myshell blank.dsk -f
