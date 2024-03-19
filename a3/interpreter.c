@@ -60,7 +60,9 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     if (args_size > 1)
       return handle_error(TOO_MANY_TOKENS);
     return help();
-  } else if (strcmp(command_args[0], "quit") == 0 ||
+  } 
+  
+  else if (strcmp(command_args[0], "quit") == 0 ||
              strcmp(command_args[0], "exit") == 0) { // quit
     if (args_size > 1)
       return handle_error(TOO_MANY_TOKENS);
@@ -72,7 +74,9 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     filesys_done();
 
     return quit();
-  } else if (strcmp(command_args[0], "set") == 0) { // set
+  } 
+  
+  else if (strcmp(command_args[0], "set") == 0) { // set
     if (args_size < 3)
       return handle_error(TOO_FEW_TOKENS);
 
@@ -107,13 +111,17 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     int ret_val = set(command_args[1], buffer);
     free(buffer);
     return ret_val;
-  } else if (strcmp(command_args[0], "print") == 0) { // print
+  } 
+  
+  else if (strcmp(command_args[0], "print") == 0) { // print
     if (args_size < 2)
       return handle_error(TOO_FEW_TOKENS);
     if (args_size > 2)
       return handle_error(TOO_MANY_TOKENS);
     return print(command_args[1]);
-  } else if (strcmp(command_args[0], "run") == 0) { // run
+  } 
+  
+  else if (strcmp(command_args[0], "run") == 0) { // run
     if (args_size < 2)
       return handle_error(TOO_FEW_TOKENS);
     if (args_size > 2)
@@ -143,11 +151,15 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     system(command2);
 
     return ret;
-  } else if (strcmp(command_args[0], "echo") == 0) { // echo
+  } 
+  
+  else if (strcmp(command_args[0], "echo") == 0) { // echo
     if (args_size > 2)
       return handle_error(TOO_MANY_TOKENS);
     return echo(command_args[1]);
-  } else if (strcmp(command_args[0], "exec") == 0) { // exec
+  } 
+  
+  else if (strcmp(command_args[0], "exec") == 0) { // exec
     if (args_size <= 1)
       return handle_error(TOO_FEW_TOKENS);
     if (args_size > 5)
@@ -181,7 +193,9 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     system(command2);
 
     return ret;
-  } else if (strcmp(command_args[0], "resetmem") == 0) { // resetmem
+  } 
+  
+  else if (strcmp(command_args[0], "resetmem") == 0) { // resetmem
     reset_var_zone();
     return 0;
   }
@@ -194,21 +208,27 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     if (status == 1)
       return handle_error(FILESYSTEM_ERROR);
     return 0;
-  } else if (strcmp(command_args[0], "cat") == 0) { // cat
+  } 
+  
+  else if (strcmp(command_args[0], "cat") == 0) { // cat
     if (args_size != 2)
       return handle_error(TOO_MANY_TOKENS);
     int status = fsutil_cat(command_args[1]);
     if (status == 1)
       return handle_error(FILE_DOES_NOT_EXIST);
     return 0;
-  } else if (strcmp(command_args[0], "rm") == 0) { // rm
+  } 
+  
+  else if (strcmp(command_args[0], "rm") == 0) { // rm
     if (args_size != 2)
       return handle_error(TOO_MANY_TOKENS);
     int status = fsutil_rm(command_args[1]);
     if (status == 0)
       return handle_error(ERROR_RM);
     return status;
-  } else if (strcmp(command_args[0], "create") == 0) { // rm
+  }
+  
+   else if (strcmp(command_args[0], "create") == 0) { // rm
     if (args_size != 3)
       return handle_error(TOO_MANY_TOKENS);
     int size = atoi(command_args[2]);
@@ -216,7 +236,9 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     if (status == 0)
       return handle_error(FILE_CREATION_ERROR);
     return 0;
-  } else if (strcmp(command_args[0], "write") == 0) { // rm
+  }
+  
+   else if (strcmp(command_args[0], "write") == 0) { // rm
     if (args_size < 3)
       return handle_error(TOO_FEW_TOKENS);
     int size = 0;
@@ -244,7 +266,9 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
              bytes_written, size);
     }
     return 0;
-  } else if (strcmp(command_args[0], "find_file") == 0) { // rm
+  } 
+  
+  else if (strcmp(command_args[0], "find_file") == 0) { // rm
     if (args_size < 2)
       return handle_error(TOO_FEW_TOKENS);
     int size = 0;
@@ -266,7 +290,9 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     find_file(buf);
     free(buf);
     return 0;
-  } else if (strcmp(command_args[0], "read") == 0) { // rm
+  } 
+  
+  else if (strcmp(command_args[0], "read") == 0) { // rm
     if (args_size != 3)
       return handle_error(TOO_MANY_TOKENS);
     int size = atoi(command_args[2]);
@@ -280,23 +306,33 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     printf("%s\n", buffer);
     free(buffer);
     return bytes_read == size;
-  } else if (strcmp(command_args[0], "copy_in") == 0) {
+  } 
+  
+  else if (strcmp(command_args[0], "copy_in") == 0) {
     if (args_size != 2)
       return handle_error(TOO_MANY_TOKENS);
 
     int status = copy_in(command_args[1]);
-    if (status != 0)
-      return handle_error(status);
-    return 0;
-  } else if (strcmp(command_args[0], "copy_out") == 0) {
+  
+    if (status == 1) return handle_error(FILE_DOES_NOT_EXIST);
+    if (status == 2) return handle_error(FILE_CREATION_ERROR);
+    if (status == 3) return handle_error(NO_MEM_SPACE);
+    return status;
+
+  } 
+  
+  
+  else if (strcmp(command_args[0], "copy_out") == 0) {
     if (args_size != 2)
       return handle_error(TOO_MANY_TOKENS);
 
-    int status = copy_out(command_args[1]);
-    if (status != 0)
-      return handle_error(status);
-    return 0;
-  } else if (strcmp(command_args[0], "size") == 0) { // rm
+    int r = copy_out(command_args[1]);
+    if (r == 1) return handle_error(FILE_DOES_NOT_EXIST);
+    return r;
+
+  } 
+  
+  else if (strcmp(command_args[0], "size") == 0) { // rm
     if (args_size != 2)
       return handle_error(TOO_MANY_TOKENS);
     int length = fsutil_size(command_args[1]);
@@ -305,7 +341,9 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
     }
     printf("File length: %d\n", length);
     return 0;
-  } else if (strcmp(command_args[0], "seek") == 0) { // rm
+  } 
+  
+  else if (strcmp(command_args[0], "seek") == 0) { // rm
     if (args_size != 3)
       return handle_error(TOO_MANY_TOKENS);
     int offset = atoi(command_args[2]);
@@ -314,24 +352,32 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
       return handle_error(FILE_DOES_NOT_EXIST);
     }
     return 0;
-  } else if (strcmp(command_args[0], "freespace") == 0) { // rm
+  } 
+  
+  else if (strcmp(command_args[0], "freespace") == 0) { // rm
     if (args_size != 1)
       return handle_error(TOO_MANY_TOKENS);
     int free_space = fsutil_freespace();
     printf("Num free sectors: %d (%d total bytes)\n", free_space,
            free_space * BLOCK_SECTOR_SIZE);
     return 0;
-  } else if (strcmp(command_args[0], "fragmentation_degree") == 0) { // rm
+  } 
+  
+  else if (strcmp(command_args[0], "fragmentation_degree") == 0) { // rm
     if (args_size != 1)
       return handle_error(TOO_MANY_TOKENS);
     fragmentation_degree();
     return 0;
-  } else if (strcmp(command_args[0], "defragment") == 0) { // rm
+  }
+  
+  else if (strcmp(command_args[0], "defragment") == 0) { // rm
     if (args_size != 1)
       return handle_error(TOO_MANY_TOKENS);
     defragment();
     return 0;
-  } else if (strcmp(command_args[0], "recover") == 0) { // rm
+  } 
+  
+  else if (strcmp(command_args[0], "recover") == 0) { // rm
     if (args_size != 2)
       return handle_error(TOO_MANY_TOKENS);
     int flag = atoi(command_args[1]);
