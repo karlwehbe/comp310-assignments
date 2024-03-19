@@ -34,7 +34,11 @@ int copy_in(char *fname) {
     int res = fsutil_create(fname, fileSize); 
     int spaceavailable = fsutil_freespace();
 
-    if (res == 1 && !(spaceavailable < 2)) {
+    int space_needed = (fileSize / 512) + 2;
+    printf("DEBUG : space needed = %i\n", space_needed);
+
+
+    if (res == 1 && !(spaceavailable < space_needed)) {
         char buffer[1024]; 
         int bytesRead = 0;
         while ((bytesRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
@@ -109,12 +113,123 @@ void find_file(char *pattern) {
   return;
 }
 
+
 void fragmentation_degree() {
-  // TODO
+    struct dir *dir;
+    char name[NAME_MAX + 1];
+
+    dir = dir_open_root();
+    if (dir == NULL)
+      return ;
+
+    int n_fragmented = 0;
+    int n_fragmentable = 0;
+
+    while (dir_readdir(dir, name)) {
+      struct file* f = get_file_by_fname(name);
+      struct inode* node = file_get_inode(f);
+      
+      size_t num_sectors  = bytes_to_sectors(node->data.length);
+      int truesize = (int) num_sectors;
+      printf("size = %i\n", truesize);
+
+
+      if (truesize > 1) {
+      
+        n_fragmentable++;
+
+        block_sector_t *blocks = node->data.direct_blocks;
+        // might have to also check indirect_block and doubly_indirect_block
+
+        for (int i = 0; i < sizeof(blocks); i++) {
+          printf("block[i] = %i\n", blocks[i]);
+            int place = 0;
+            if (i == 0) {
+              place = blocks[0];
+            } else {
+              place = blocks[i-1];
+            }
+            
+            if (blocks[i] - place > 3 && blocks[i] != 0) {
+              n_fragmented++;
+              break;
+            }
+        }
+      }
+    }
+
+    float degree = n_fragmented / n_fragmentable;
+
+    printf("Degree of fragmentation is : %f\n", degree);
 }
 
+
+
 int defragment() {
-  // TODO
+
+    struct dir *dir;
+    char name[NAME_MAX + 1];
+
+    dir = dir_open_root();
+    if (dir == NULL)
+      return 1;
+
+    int size_of_all_files = 0;
+    int n_files = 0;
+    while (dir_readdir(dir, name)) {
+      size_of_all_files = size_of_all_files + fsutil_size(name);
+      n_files++;
+    }
+    dir_close(dir);
+
+
+    char* buffer =  malloc((size_of_all_files+1 + n_files * 14) * sizeof(char));
+
+    printf("size of buffer = %i\n ", (size_of_all_files+1 + n_files * 14));
+
+    struct dir *dir2;
+    char fname[NAME_MAX + 1];
+    dir2 = dir_open_root(); 
+    while (dir_readdir(dir2, fname)) {
+    
+      int size = fsutil_size(name);
+      fsutil_seek(fname, 0);
+      fsutil_read(fname, buffer, size); 
+      strcat(buffer, "end_of_file");
+    }
+
+    char* start = buffer;
+    char* end = NULL;
+    int delimiterLen = strlen("end_of_file");
+
+    char* parts[n_files];
+    int partsCount = 0;
+
+    while ((end = strstr(start, "end_of_file")) != NULL) {
+        int partSize = end - start;
+        parts[partsCount] = (char*)malloc(partSize + 1);
+
+        strncpy(parts[partsCount], start, partSize);
+        parts[partsCount][partSize] = '\0'; 
+
+        start = end + delimiterLen; 
+        partsCount++;
+    }
+
+    if (*start) {
+        int partSize = strlen(start);
+        parts[partsCount] = (char*)malloc(partSize + 1); 
+
+        strcpy(parts[partsCount], start);
+        partsCount++;
+    }
+
+    // Example: Print and free the parts
+    for (int i = 0; i < partsCount; i++) {
+        printf("File %d: %s\n", i + 1, parts[i]);
+        free(parts[i]);
+    }
+
   return 0;
 }
 

@@ -291,7 +291,7 @@ int memFullorNewStart() {	//CHECKS IF FRAME STORE IS FULL OR WHERE THE FIRST FRE
 			return i;
 		}
 	}
-return -1;	// RETURNS -1 IF IS FULL;
+return -1;	// RETURNS -1 IF IS FULL
 }
 
 void mem_set_line(char* filename, char* line, int index) { // SETS A LINE AT A PARTICULAR INDEX
