@@ -15,13 +15,14 @@
 #include <string.h>
 
 
+void recreate_files(char **parts, int partsCount);
 
 int copy_in(char *fname) {
 
     // still need to add extreme cases, if no space in memory
     FILE *source;
-    long fileSize;
-    int bytesWritten = 0;
+    int fileSize;
+    int bitsWritten = 0;
 
 
     source = fopen(fname, "r");
@@ -35,24 +36,26 @@ int copy_in(char *fname) {
     int spaceavailable = fsutil_freespace();
 
     int space_needed = (fileSize / 512) + 2;
-    printf("DEBUG : space needed = %i\n", space_needed);
+    printf("DEBUG : size = %i and space needed = %i\n", fileSize, space_needed);
 
 
     if (res == 1 && !(spaceavailable < space_needed)) {
-        char buffer[1024]; 
-        int bytesRead = 0;
-        while ((bytesRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
-            int writeResult = fsutil_write(fname, buffer, bytesRead);
-            bytesWritten += writeResult;
-            if (writeResult < bytesRead) {
-                printf("Warning: could only write %d out of %ld bytes (reached end of file)\n", bytesWritten, fileSize);
+        char buffer[fileSize+1]; 
+        int bitsRead = 0;
+        while ((bitsRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
+            int writeResult = fsutil_write(fname, buffer, bitsRead+1);
+            bitsWritten += writeResult;
+            if (writeResult < bitsRead) {
+                printf("Warning: could only write %d out of %i bytes (reached end of file)\n", bitsWritten, fileSize);
                 break; 
             }
         }
 
+        printf("bits written = %i\n ", bitsWritten);
+
         fclose(source);
 
-        if (bytesWritten < fileSize) {
+        if (bitsWritten < fileSize) {
             return 3;
         } else {
             return 0;
@@ -64,11 +67,14 @@ int copy_in(char *fname) {
 
 int copy_out(char *fname) {
 
+    struct file *f = get_file_by_fname(fname);
+    if (f == NULL) {
+      return 1;
+    }
     int size = fsutil_size(fname);
     char* buffer =  malloc((size+1) * sizeof(char));
     memset(buffer, 0, size + 1);
 
-    struct file *f = get_file_by_fname(fname);
     int offset = file_tell(f);
 
     fsutil_seek(fname, 0);
@@ -126,8 +132,19 @@ void fragmentation_degree() {
     int n_fragmentable = 0;
 
     while (dir_readdir(dir, name)) {
+      
       struct file* f = get_file_by_fname(name);
+      if (f == NULL) {
+        printf("File %s not found.\n", name);
+        continue; // Skip to the next iteration of the loop
+      }
+
+      printf("name = %s\n", name);
       struct inode* node = file_get_inode(f);
+      if (node == NULL) {
+        printf("Inode for %s not found.\n", name);
+        continue; // Skip to the next iteration of the loop
+      }
       
       size_t num_sectors  = bytes_to_sectors(node->data.length);
       int truesize = (int) num_sectors;
@@ -142,7 +159,7 @@ void fragmentation_degree() {
         // might have to also check indirect_block and doubly_indirect_block
 
         for (int i = 0; i < sizeof(blocks); i++) {
-          printf("block[i] = %i\n", blocks[i]);
+          //printf("block[i] = %i\n", blocks[i]);
             int place = 0;
             if (i == 0) {
               place = blocks[0];
@@ -155,11 +172,13 @@ void fragmentation_degree() {
               break;
             }
         }
+      
       }
     }
 
-    float degree = n_fragmented / n_fragmentable;
+    dir_close(dir);
 
+    float degree = n_fragmented / n_fragmentable;
     printf("Degree of fragmentation is : %f\n", degree);
 }
 
@@ -176,6 +195,7 @@ int defragment() {
 
     int size_of_all_files = 0;
     int n_files = 0;
+    
     while (dir_readdir(dir, name)) {
       size_of_all_files = size_of_all_files + fsutil_size(name);
       n_files++;
@@ -190,22 +210,39 @@ int defragment() {
     struct dir *dir2;
     char fname[NAME_MAX + 1];
     dir2 = dir_open_root(); 
+
     while (dir_readdir(dir2, fname)) {
-    
-      int size = fsutil_size(name);
+
+      printf("\nfilename = %s\n\n", fname);
+      int size = fsutil_size(fname);
+      char *text = malloc((size + 14) * sizeof(char));
       fsutil_seek(fname, 0);
-      fsutil_read(fname, buffer, size); 
-      strcat(buffer, "end_of_file");
+      fsutil_read(fname, text, size);
+      strcat(text, "\n\nEND_OF_FILE\n\n\n");
+
+      strcat(buffer, fname);
+      strcat(buffer, text);
+
+      struct file *f = get_file_by_fname(fname);
+      struct inode *node = file_get_inode(f);
+      inode_remove(node);
+  
     }
+
+    dir_close(dir2);
+
+    //free_map_close();   //deletes the whole memory.
+    printf("space after freeing = %i\n", fsutil_freespace());
+
 
     char* start = buffer;
     char* end = NULL;
-    int delimiterLen = strlen("end_of_file");
+    int delimiterLen = strlen("END_OF_FILE");
 
     char* parts[n_files];
     int partsCount = 0;
 
-    while ((end = strstr(start, "end_of_file")) != NULL) {
+    while ((end = strstr(start, "END_OF_FILE")) != NULL) {
         int partSize = end - start;
         parts[partsCount] = (char*)malloc(partSize + 1);
 
@@ -226,10 +263,12 @@ int defragment() {
 
     // Example: Print and free the parts
     for (int i = 0; i < partsCount; i++) {
-        printf("File %d: %s\n", i + 1, parts[i]);
+        printf("File %d : %s\n", i + 1, parts[i]);
         free(parts[i]);
     }
 
+    recreate_files(parts, partsCount);
+  
   return 0;
 }
 
@@ -244,4 +283,41 @@ void recover(int flag) {
 
     // TODO
   }
+}
+
+
+void recreate_files(char **parts, int partsCount) {
+    for (int i = 0; i < partsCount; i++) {
+        // Assuming the first line of each part is the filename
+        char *part = parts[i];
+        char *endOfFileName = strchr(part, '\n');
+        if (endOfFileName == NULL) {
+            printf("Error: Filename delimiter not found in part %d\n", i);
+            continue;
+        }
+
+        // Calculate the filename length and content length
+        int fileNameLength = endOfFileName - part;
+        int contentLength = strlen(part) - (fileNameLength + 1); // +1 to skip the newline
+
+        // Allocate and set up the filename string
+        char *fname = (char *)malloc(fileNameLength + 1); // +1 for null terminator
+        if (fname == NULL) {
+            printf("Error: Failed to allocate memory for filename\n");
+            continue;
+        }
+        strncpy(fname, part, fileNameLength);
+        fname[fileNameLength] = '\0'; // Null-terminate the filename
+
+        // Point to the start of the actual content
+        char *content = endOfFileName + 1;
+
+        // Create and write to the file
+        fsutil_create(fname, contentLength);
+        fsutil_write(fname, content, contentLength);
+
+        printf("Recreated file: %s\n", fname);
+
+        free(fname); // Free the allocated filename string
+    }
 }
