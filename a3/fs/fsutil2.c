@@ -15,8 +15,6 @@
 #include <string.h>
 
 
-void recreate_files(char **parts, int partsCount);
-
 int copy_in(char *fname) {
 
     // still need to add extreme cases, if no space in memory
@@ -35,8 +33,19 @@ int copy_in(char *fname) {
     int res = fsutil_create(fname, fileSize); 
     int spaceavailable = fsutil_freespace();
 
-    int space_needed = (fileSize / 512) + 2;
-    printf("DEBUG : size = %i and space needed = %i\n", fileSize, space_needed);
+    int sectors_to_read = 0;
+    if (fileSize % 512 != 0) {
+      sectors_to_read = (fileSize/512) + 2;
+    } else {
+      sectors_to_read = (fileSize/512) + 1;
+    }
+
+    int space_needed = sectors_to_read;
+    //printf("DEBUG : size = %i and space needed = %i\n", fileSize, space_needed);
+
+    int bytesavailable = spaceavailable * 512;
+
+    int need_indirectblocks = 123*512;
 
 
     if (res == 1 && !(spaceavailable < space_needed)) {
@@ -51,7 +60,7 @@ int copy_in(char *fname) {
             }
         }
 
-        printf("bits written = %i\n ", bitsWritten);
+        //printf("bits written = %i\n ", bitsWritten);
 
         fclose(source);
 
@@ -131,24 +140,19 @@ void fragmentation_degree() {
     int n_fragmented = 0;
     int n_fragmentable = 0;
 
+
     while (dir_readdir(dir, name)) {
+
+      int size = fsutil_size(name);
+      //printf("name = %s ", name);
       
       struct file* f = get_file_by_fname(name);
-      if (f == NULL) {
-        printf("File %s not found.\n", name);
-        continue; // Skip to the next iteration of the loop
-      }
-
-      printf("name = %s\n", name);
+      
       struct inode* node = file_get_inode(f);
-      if (node == NULL) {
-        printf("Inode for %s not found.\n", name);
-        continue; // Skip to the next iteration of the loop
-      }
       
       size_t num_sectors  = bytes_to_sectors(node->data.length);
       int truesize = (int) num_sectors;
-      printf("size = %i\n", truesize);
+      //printf("size = %i\n", truesize);
 
 
       if (truesize > 1) {
@@ -159,7 +163,7 @@ void fragmentation_degree() {
         // might have to also check indirect_block and doubly_indirect_block
 
         for (int i = 0; i < sizeof(blocks); i++) {
-          //printf("block[i] = %i\n", blocks[i]);
+            //printf("block[i] = %i\n", blocks[i]);
             int place = 0;
             if (i == 0) {
               place = blocks[0];
@@ -169,6 +173,7 @@ void fragmentation_degree() {
             
             if (blocks[i] - place > 3 && blocks[i] != 0) {
               n_fragmented++;
+              //printf("fragmentable increased\n");
               break;
             }
         }
@@ -188,6 +193,7 @@ int defragment() {
 
     struct dir *dir;
     char name[NAME_MAX + 1];
+   
 
     dir = dir_open_root();
     if (dir == NULL)
@@ -197,85 +203,162 @@ int defragment() {
     int n_files = 0;
     
     while (dir_readdir(dir, name)) {
-      size_of_all_files = size_of_all_files + fsutil_size(name);
-      n_files++;
+      int size = fsutil_size(name);
+      if (size > 512) {
+        size_of_all_files += fsutil_size(name) ;
+        n_files++;
+      }
     }
     dir_close(dir);
 
-
-    char* buffer =  malloc((size_of_all_files+1 + n_files * 14) * sizeof(char));
-
-    printf("size of buffer = %i\n ", (size_of_all_files+1 + n_files * 14));
-
-    struct dir *dir2;
-    char fname[NAME_MAX + 1];
-    dir2 = dir_open_root(); 
-
-    while (dir_readdir(dir2, fname)) {
-
-      printf("\nfilename = %s\n\n", fname);
-      int size = fsutil_size(fname);
-      char *text = malloc((size + 14) * sizeof(char));
-      fsutil_seek(fname, 0);
-      fsutil_read(fname, text, size);
-      strcat(text, "\n\nEND_OF_FILE\n\n\n");
-
-      strcat(buffer, fname);
-      strcat(buffer, text);
-
-      struct file *f = get_file_by_fname(fname);
-      struct inode *node = file_get_inode(f);
-      inode_remove(node);
-  
+    if (n_files == 0) {
+      return 0;
     }
 
+
+    const char** fnames = malloc(n_files * sizeof(char*));
+
+    char* buffer =  malloc((size_of_all_files+1 + n_files * 16) * sizeof(char));
+    buffer[0] = '\0';
+    //printf("size of buffer = %i\n ", (size_of_all_files+1 + n_files * 14));
+
+    
+    struct dir *dir2 = dir_open_root();
+    char fname[NAME_MAX + 1];
+    int number = 0;
+
+    while (dir_readdir(dir2, fname) && number < n_files) {
+
+      int size = fsutil_size(fname);
+
+      if (size > 512) {
+        char text[size + strlen("\n\nEND_OF_FILE\n\n\n") + 1];
+        fsutil_seek(fname, 0);
+        fsutil_read(fname, text, size);
+        strcat(text, "\n\nEND_OF_FILE\n\n\n");
+        strcat(buffer, text);
+
+        fnames[number] = (const char*)strdup(fname);
+        number++;
+        fsutil_rm(fname);
+
+      }
+    }
     dir_close(dir2);
 
-    //free_map_close();   //deletes the whole memory.
-    printf("space after freeing = %i\n", fsutil_freespace());
-
+    //printf("space after freeing = %i\n", fsutil_freespace());
+   
 
     char* start = buffer;
     char* end = NULL;
     int delimiterLen = strlen("END_OF_FILE");
 
-    char* parts[n_files];
+    char** parts = malloc(n_files * sizeof(char*));
+    if (!parts) {
+        free(buffer);
+        return -1;
+    }
     int partsCount = 0;
 
     while ((end = strstr(start, "END_OF_FILE")) != NULL) {
         int partSize = end - start;
-        parts[partsCount] = (char*)malloc(partSize + 1);
+        parts[partsCount] = malloc(partSize + 1);
+        if (!parts[partsCount]) {
+            // Handle malloc failure for any part
+            for (int i = 0; i < partsCount; ++i) {
+                free(parts[i]);
+            }
+            free(parts);
+            free(buffer);
+            return -1;
+        }
 
         strncpy(parts[partsCount], start, partSize);
         parts[partsCount][partSize] = '\0'; 
-
         start = end + delimiterLen; 
         partsCount++;
     }
 
     if (*start) {
         int partSize = strlen(start);
-        parts[partsCount] = (char*)malloc(partSize + 1); 
+        parts[partsCount] = malloc(partSize + 1); 
+        if (!parts[partsCount]) {
+            for (int i = 0; i < partsCount; ++i) {
+                free(parts[i]);
+            }
+            free(parts);
+            free(buffer);
+            return -1;
+        }
 
         strcpy(parts[partsCount], start);
         partsCount++;
     }
 
-    // Example: Print and free the parts
-    for (int i = 0; i < partsCount; i++) {
-        printf("File %d : %s\n", i + 1, parts[i]);
-        free(parts[i]);
+    for (int i = 0; i < partsCount - 1; i++) {
+        fsutil_create(fnames[i], strlen(parts[i])-1);
+        fsutil_write((char*)fnames[i], parts[i], strlen(parts[i])-1);
     }
+    free(buffer); 
+    free(fnames);
 
-    recreate_files(parts, partsCount);
-  
-  return 0;
+    return 0;
 }
 
-void recover(int flag) {
-  if (flag == 0) { // recover deleted inodes
 
-    // TODO
+
+void recover(int flag) {
+  if (flag == 0) {            // recover deleted inodes
+   
+    struct bitmap* bmap = free_map;
+
+    //printf("bitmap size = %i\n", bitmap_size(bmap));
+    int freesectors = 0;
+    int size = 0;
+
+    for (int i = 0; i < bitmap_size(bmap); i++) {
+
+      if (!bitmap_test(bmap, i)) { // If the i-th bit is 0 (free sector), gives 1 if removed/empty
+          struct inode *node = inode_open(i); //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
+          struct inode_disk id = node->data;
+          struct file* f = file_open(node);
+
+          if (id.length > 0 && !id.is_dir && node->sector > 0) {
+            //printf(" at i = %i, sector of node = %i and length of node/file = %i \n", i, node->sector, id.length);
+            
+            node->removed = 0;
+            bitmap_set(bmap, i, 1);
+            freesectors++;
+
+            int sectors_to_read = 0;
+            if (id.length % 512 != 0) {
+              sectors_to_read = i + (id.length/512 + 1);
+            } else {
+              sectors_to_read = i + (id.length/512);
+            }
+
+            for (int j = i; j < sectors_to_read; j++) {
+                bitmap_set(bmap, j, 1);
+                freesectors++;
+            }
+
+            char newname[15]; 
+            sprintf(newname, "recovered0-%u", node->sector); 
+            //printf("new name = %s\n", newname);
+            add_to_file_table(f, newname);
+            
+            struct dir* root = dir_open_root();
+            dir_add(root, newname, i, false);
+            
+          }
+          
+      }
+      size++;
+    }
+
+    //printf("# of sectors reallocated = %i and after = %i and total loops = %i\n", freesectors, num_free_sectors(), size);
+
+
   } else if (flag == 1) { // recover all non-empty sectors
 
     // TODO
@@ -286,38 +369,4 @@ void recover(int flag) {
 }
 
 
-void recreate_files(char **parts, int partsCount) {
-    for (int i = 0; i < partsCount; i++) {
-        // Assuming the first line of each part is the filename
-        char *part = parts[i];
-        char *endOfFileName = strchr(part, '\n');
-        if (endOfFileName == NULL) {
-            printf("Error: Filename delimiter not found in part %d\n", i);
-            continue;
-        }
-
-        // Calculate the filename length and content length
-        int fileNameLength = endOfFileName - part;
-        int contentLength = strlen(part) - (fileNameLength + 1); // +1 to skip the newline
-
-        // Allocate and set up the filename string
-        char *fname = (char *)malloc(fileNameLength + 1); // +1 for null terminator
-        if (fname == NULL) {
-            printf("Error: Failed to allocate memory for filename\n");
-            continue;
-        }
-        strncpy(fname, part, fileNameLength);
-        fname[fileNameLength] = '\0'; // Null-terminate the filename
-
-        // Point to the start of the actual content
-        char *content = endOfFileName + 1;
-
-        // Create and write to the file
-        fsutil_create(fname, contentLength);
-        fsutil_write(fname, content, contentLength);
-
-        printf("Recreated file: %s\n", fname);
-
-        free(fname); // Free the allocated filename string
-    }
-}
+  
