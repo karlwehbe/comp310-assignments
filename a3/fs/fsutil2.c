@@ -235,7 +235,7 @@ int defragment() {
 
       int size = fsutil_size(fname);
 
-      if (size > 512) {
+      if (size > 0) {
         char text[size + strlen("\n\nEND_OF_FILE\n\n\n") + 1];
         fsutil_seek(fname, 0);
         fsutil_read(fname, text, size);
