@@ -43,12 +43,12 @@ int copy_in(char *fname) {
     int space_needed = sectors_to_read;
     //printf("DEBUG : size = %i and space needed = %i\n", fileSize, space_needed);
 
-    int bytesavailable = spaceavailable * 512;
+    int bytesavailable = (spaceavailable - 1) * 512;
 
     int need_indirectblocks = 123*512;
 
 
-    if (res == 1 && !(spaceavailable < space_needed)) {
+    if (res == 1 && !(spaceavailable < space_needed) && fileSize < need_indirectblocks && fileSize < bytesavailable) {
         char buffer[fileSize+1]; 
         int bitsRead = 0;
         while ((bitsRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
@@ -145,7 +145,6 @@ void fragmentation_degree() {
 
     while (dir_readdir(dir, name)) {
 
-      int size = fsutil_size(name);
       struct file* f = get_file_by_fname(name);
       struct inode* node = file_get_inode(f);
       
@@ -160,7 +159,7 @@ void fragmentation_degree() {
         block_sector_t *blocks = node->data.direct_blocks;
         // might have to also check indirect_block and doubly_indirect_block
         for (int i = 0; i < sizeof(blocks); i++) {
-            //printf("block[i] = %i\n", blocks[i]);
+            printf("filename = %s, block[i] = %i\n", name, blocks[i]);
             int place = 0;
             if (i == 0) {
               place = blocks[0];
