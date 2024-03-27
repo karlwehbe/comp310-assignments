@@ -77,7 +77,9 @@ int copy_in(char *fname) {
 int copy_out(char *fname) {
 
     struct file *f = get_file_by_fname(fname);
+    
     if (f == NULL) {
+      printf("file doesnt exist");
       return 1;
     }
     int size = fsutil_size(fname);
