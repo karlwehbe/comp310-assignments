@@ -222,8 +222,6 @@ int defragment() {
 
     char* buffer =  malloc((size_of_all_files+1 + n_files * 16) * sizeof(char));
     buffer[0] = '\0';
-    //printf("size of buffer = %i\n ", (size_of_all_files+1 + n_files * 14));
-
     
     struct dir *dir2 = dir_open_root();
     char fname[NAME_MAX + 1];
@@ -247,9 +245,6 @@ int defragment() {
       }
     }
     dir_close(dir2);
-
-    //printf("space after freeing = %i\n", fsutil_freespace());
-   
 
     char* start = buffer;
     char* end = NULL;
@@ -314,7 +309,6 @@ void recover(int flag) {
    
     struct bitmap* bmap = free_map;
 
-    //printf("bitmap size = %i\n", bitmap_size(bmap));
     int freesectors = 0;
     int size = 0;
 
@@ -327,7 +321,6 @@ void recover(int flag) {
 
           if (id.length > 0 && !id.is_dir && node->sector > 0) {
             //printf(" at i = %i, sector of node = %i and length of node/file = %i \n", i, node->sector, id.length);
-            
             node->removed = 0;
             bitmap_set(bmap, i, 1);
             freesectors++;
@@ -346,18 +339,15 @@ void recover(int flag) {
 
             char newname[15]; 
             sprintf(newname, "recovered0-%u", node->sector); 
-            //printf("new name = %s\n", newname);
             add_to_file_table(f, newname);
             
             struct dir* root = dir_open_root();
             dir_add(root, newname, i, false);
-            
           }
           
       }
       size++;
     }
-
     //printf("# of sectors reallocated = %i and after = %i and total loops = %i\n", freesectors, num_free_sectors(), size);
 
 
