@@ -145,22 +145,28 @@ void fragmentation_degree() {
 
     while (dir_readdir(dir, name)) {
 
+      int size = fsutil_size(name);
+
       struct file* f = get_file_by_fname(name);
       struct inode* node = file_get_inode(f);
       
-      size_t num_sectors  = bytes_to_sectors(node->data.length);
-      int truesize = (int) num_sectors;
-      //printf("size = %i\n", truesize);
+    
+      int sectors_to_read = 0;
+      if (size % 512 != 0) {
+        sectors_to_read = (size/512) + 1;
+      } else {
+        sectors_to_read = (size/512);
+      }
 
-      if (truesize > 1) {
+      if (sectors_to_read > 1) {
       
         n_fragmentable++;
         
-        block_sector_t *blocks = node->data.direct_blocks;
-        //block_sector_t *indirect_blocks = node->data.indirect_block;
+        block_sector_t *blocks = get_inode_data_sectors(node);
         // might have to also check indirect_block and doubly_indirect_block
-        for (int i = 0; i < sizeof(blocks); i++) {
-            //printf("filename = %s, block[i] = %i\n", name, blocks[i]);
+
+        for (int i = 0; i < sectors_to_read; i++) {
+            //printf("filename = %s, size = %i, block[i] = %i\n", name, sectors_to_read, blocks[i]);
             int place = 0;
             if (i == 0) {
               place = blocks[0];
@@ -174,7 +180,6 @@ void fragmentation_degree() {
               break;
             }
         }
-      
       }
     }
 
