@@ -89,13 +89,16 @@ int copy_out(char *fname) {
     fsutil_seek(fname, 0);
     fsutil_read(fname, buffer, size);
 
+
     FILE* file = fopen(fname, "w");
+    printf("filename\n");
     if (file == NULL) {
       fsutil_seek(fname, offset);    // take pointer back to original place.
       return 1;
     }
     fputs(buffer, file);
     fclose(file);
+    free(buffer);
     
     fsutil_seek(fname, offset);    // take pointer back to original place.
     return 0;
