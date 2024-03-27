@@ -208,7 +208,7 @@ int defragment() {
     
     while (dir_readdir(dir, name)) {
       int size = fsutil_size(name);
-      if (size > 512) {
+      if (size > 0) {
         size_of_all_files += fsutil_size(name) ;
         n_files++;
       }
