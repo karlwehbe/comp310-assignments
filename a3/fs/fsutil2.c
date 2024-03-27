@@ -78,26 +78,23 @@ int copy_out(char *fname) {
 
     struct file *f = get_file_by_fname(fname);
     
-    if (f == NULL) {
-      printf("file doesnt exist");
-      return 1;
-    }
     int size = fsutil_size(fname);
     char* buffer =  malloc((size+1) * sizeof(char));
     memset(buffer, 0, size + 1);
 
-    int offset = file_tell(f);
+    int offset = 0;
+    if (f != NULL) offset = file_tell(f);
 
     fsutil_seek(fname, 0);
     fsutil_read(fname, buffer, size);
 
 
     FILE* file = fopen(fname, "w");
-    printf("filename\n");
     if (file == NULL) {
       fsutil_seek(fname, offset);    // take pointer back to original place.
       return 1;
     }
+    
     fputs(buffer, file);
     fclose(file);
     free(buffer);
