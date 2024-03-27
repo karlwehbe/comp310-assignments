@@ -76,7 +76,7 @@ int copy_in(char *fname) {
 
 int copy_out(char *fname) {
 
-    struct file *f = get_file_by_fname(fname);
+    struct file *f = filesys_open(fname);
     
     int size = fsutil_size(fname);
     char* buffer =  malloc((size+1) * sizeof(char));
@@ -112,7 +112,6 @@ void find_file(char *pattern) {
     return ;
 
   while (dir_readdir(dir, name)) {
-
     int size = fsutil_size(name);
     char* buffer =  malloc((size+1) * sizeof(char));
     memset(buffer, 0, size + 1);
@@ -148,7 +147,6 @@ void fragmentation_degree() {
       struct file* f = filesys_open(name);
       struct inode* node = file_get_inode(f);
       
-    
       int sectors_to_read = 0;
       if (fsutil_size(name) % 512 != 0) {
         sectors_to_read = (fsutil_size(name)/512) + 1;
@@ -161,7 +159,6 @@ void fragmentation_degree() {
         n_fragmentable++;
         
         block_sector_t *blocks = get_inode_data_sectors(node);
-        // might have to also check indirect_block and doubly_indirect_block
 
         for (int i = 0; i < sectors_to_read; i++) {
             //printf("filename = %s, size = %i, block[i] = %i\n", name, sectors_to_read, blocks[i]);
@@ -180,7 +177,6 @@ void fragmentation_degree() {
         }
       }
     }
-
     dir_close(dir);
 
     float degree = (float)n_fragmented / n_fragmentable;
@@ -217,7 +213,6 @@ int defragment() {
       return 0;
     }
 
-
     const char** fnames = malloc(n_files * sizeof(char*));
 
     char* buffer =  malloc((size_of_all_files+1 + n_files * 16) * sizeof(char));
@@ -228,7 +223,6 @@ int defragment() {
     int number = 0;
 
     while (dir_readdir(dir2, fname) && number < n_files) {
-
       int size = fsutil_size(fname);
 
       if (size > 512) {
@@ -241,7 +235,6 @@ int defragment() {
         fnames[number] = (const char*)strdup(fname);
         number++;
         fsutil_rm(fname);
-
       }
     }
     dir_close(dir2);
