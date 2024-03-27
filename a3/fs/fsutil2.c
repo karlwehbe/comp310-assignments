@@ -94,7 +94,7 @@ int copy_out(char *fname) {
       fsutil_seek(fname, offset);    // take pointer back to original place.
       return 1;
     }
-    
+
     fputs(buffer, file);
     fclose(file);
     free(buffer);
@@ -146,24 +146,19 @@ void fragmentation_degree() {
     while (dir_readdir(dir, name)) {
 
       int size = fsutil_size(name);
-      //printf("name = %s ", name);
-      
       struct file* f = get_file_by_fname(name);
-      
       struct inode* node = file_get_inode(f);
       
       size_t num_sectors  = bytes_to_sectors(node->data.length);
       int truesize = (int) num_sectors;
       //printf("size = %i\n", truesize);
 
-
       if (truesize > 1) {
       
         n_fragmentable++;
-
+        
         block_sector_t *blocks = node->data.direct_blocks;
         // might have to also check indirect_block and doubly_indirect_block
-
         for (int i = 0; i < sizeof(blocks); i++) {
             //printf("block[i] = %i\n", blocks[i]);
             int place = 0;
@@ -186,7 +181,9 @@ void fragmentation_degree() {
     dir_close(dir);
 
     float degree = n_fragmented / n_fragmentable;
-    printf("Degree of fragmentation is : %f\n", degree);
+    printf("Num fragmentable files: %i\n", n_fragmentable);
+    printf("Num fragmented files: %i\n", n_fragmented);
+    printf("Fragmentation pct: %f\n", degree);
 }
 
 
