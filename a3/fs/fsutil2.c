@@ -153,7 +153,7 @@ void fragmentation_degree() {
         sectors_to_read = (fsutil_size(name)/512);
       }
 
-      printf("sectors to read = %i\n", sectors_to_read);
+      //printf("sectors to read = %i\n", sectors_to_read);
 
       if (sectors_to_read > 1) {
       
