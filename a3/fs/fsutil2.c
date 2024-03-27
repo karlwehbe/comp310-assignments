@@ -166,7 +166,7 @@ void fragmentation_degree() {
         // might have to also check indirect_block and doubly_indirect_block
 
         for (int i = 0; i < sectors_to_read; i++) {
-            //printf("filename = %s, size = %i, block[i] = %i\n", name, sectors_to_read, blocks[i]);
+            printf("filename = %s, size = %i, block[i] = %i\n", name, sectors_to_read, blocks[i]);
             int place = 0;
             if (i == 0) {
               place = blocks[0];
