@@ -143,7 +143,6 @@ void fragmentation_degree() {
 
 
     while (dir_readdir(dir, name)) {
-
       struct file* f = filesys_open(name);
       struct inode* node = file_get_inode(f);
       
@@ -153,6 +152,8 @@ void fragmentation_degree() {
       } else {
         sectors_to_read = (fsutil_size(name)/512);
       }
+
+      printf("sectors to read = %i\n", sectors_to_read);
 
       if (sectors_to_read > 1) {
       
