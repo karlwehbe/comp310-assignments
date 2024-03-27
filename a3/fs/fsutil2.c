@@ -157,9 +157,10 @@ void fragmentation_degree() {
         n_fragmentable++;
         
         block_sector_t *blocks = node->data.direct_blocks;
+        block_sector_t *indirect_blocks = node->data.indirect_block;
         // might have to also check indirect_block and doubly_indirect_block
         for (int i = 0; i < sizeof(blocks); i++) {
-            printf("filename = %s, block[i] = %i\n", name, blocks[i]);
+            //printf("filename = %s, block[i] = %i\n", name, blocks[i]);
             int place = 0;
             if (i == 0) {
               place = blocks[0];
