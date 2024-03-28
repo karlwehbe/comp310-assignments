@@ -50,7 +50,7 @@ int copy_in(char *fname) {
         char buffer[fileSize]; 
         int bitsRead = 0;
         while ((bitsRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
-            int writeResult = fsutil_write(fname, buffer, bitsRead+1);
+            int writeResult = fsutil_write(fname, buffer, bitsRead);
             bitsWritten += writeResult;
             if (writeResult < bitsRead) {
                 printf("Warning: could only write %d out of %i bytes (reached end of file)\n", bitsWritten, fileSize);
