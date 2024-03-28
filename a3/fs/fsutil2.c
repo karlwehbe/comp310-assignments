@@ -352,7 +352,7 @@ void recover(int flag) {
             struct file* f = filesys_open(node);
             //printf("filename = %s, sector = %i\n" ,node->sector);
 
-            if (id.length > 0 && !id.is_dir && node->sector > 4) {
+            if (id.length > 0 && !id.is_dir && node->sector > 3) {
               
               char newname[15]; 
               sprintf(newname, "recovered1-%u.txt", node->sector); 
