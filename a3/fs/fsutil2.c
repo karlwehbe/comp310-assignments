@@ -47,7 +47,7 @@ int copy_in(char *fname) {
 
 
     if (res == 1 && spaceavailable >= space_needed && fileSize <= bytesavailable) {
-        char buffer[fileSize]; 
+        char buffer[fileSize+1]; 
         int bitsRead = 0;
         while ((bitsRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
             int writeResult = fsutil_write(fname, buffer, bitsRead);
