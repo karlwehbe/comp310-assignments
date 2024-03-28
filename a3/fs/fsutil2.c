@@ -49,7 +49,7 @@ int copy_in(char *fname) {
     if (res == 1 && spaceavailable >= space_needed && fileSize <= bytesavailable) {
         char buffer[fileSize+1]; 
         int bitsRead = 0;
-        while ((bitsRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
+        while ((bitsRead = fread(buffer, 1, 1, source)) > 0) {
             int writeResult = fsutil_write(fname, buffer, bitsRead+1);
             bitsWritten += writeResult;
             if (writeResult < bitsRead) {
@@ -191,7 +191,7 @@ void fragmentation_degree() {
     printf("Num fragmentable files: %i\n", n_fragmentable);
     printf("Num fragmented files: %i\n", n_fragmented);
     printf("Fragmentation pct: %f\n", degree);
-    buffer_cache_close();
+    //buffer_cache_close();
 }
 
 
@@ -302,7 +302,7 @@ int defragment() {
     free(buffer); 
     free(fnames);
     free(parts);
-    buffer_cache_close();
+    //buffer_cache_close();
 
     return 0;
 }
