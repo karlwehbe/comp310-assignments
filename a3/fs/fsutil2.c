@@ -287,14 +287,15 @@ int defragment() {
     for (int i = 0; i < n_files; i++) {
         fsutil_create((const char*) fnames[i], strlen(parts[i])-1);
         fsutil_write(fnames[i], parts[i], strlen(parts[i])-1);
-
+        struct file* f = get_file_by_fname(fnames[i]);
+        add_to_file_table(f, fnames[i]);
         free(parts[i]);
     }
     free(buffer); 
     free(fnames);
     free(parts);
-    free_map_close();
     
+
     return 0;
 }
 
