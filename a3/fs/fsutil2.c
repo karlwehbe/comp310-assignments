@@ -304,6 +304,8 @@ int defragment() {
     free(parts);
     //buffer_cache_close();
 
+    fragmentation_degree();
+    
     return 0;
 }
 
