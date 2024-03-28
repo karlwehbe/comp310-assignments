@@ -158,7 +158,7 @@ void fragmentation_degree() {
        // block_sector_t *blocks = get_inode_data_sectors(node);
         //if (blocks[0] != 0) bitmap_mark(bmap, blocks[0]);
       //}
-      printf("sectors to read = %i\n", sectors_to_read);
+      //printf("sectors to read = %i\n", sectors_to_read);
 
       if (sectors_to_read > 1) {
       
