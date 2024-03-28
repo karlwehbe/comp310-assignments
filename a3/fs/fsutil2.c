@@ -143,6 +143,7 @@ void fragmentation_degree() {
     while (dir_readdir(dir, name)) {
       struct file* f = filesys_open(name);
       struct inode* node = file_get_inode(f);
+      add_to_file_table(f, name);
       
       int sectors_to_read = 0;
       if (fsutil_size(name) % 512 != 0) {
@@ -289,6 +290,7 @@ int defragment() {
         fsutil_write(fnames[i], parts[i], strlen(parts[i])-1);
         struct file* f = get_file_by_fname(fnames[i]);
         add_to_file_table(f, fnames[i]);
+
         free(parts[i]);
     }
     free(buffer); 
