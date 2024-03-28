@@ -3,4 +3,4 @@
 make clean
 make myshell framesize=1000 varmemsize=1000
 
-./myshell tswift.dsk
+./myshell blank.dsk -f

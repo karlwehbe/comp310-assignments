@@ -45,10 +45,8 @@ int copy_in(char *fname) {
 
     int bytesavailable = (spaceavailable - 1) * 512;
 
-    int need_indirectblocks = 123*512;
 
-
-    if (res == 1 && !(spaceavailable < space_needed) && fileSize < need_indirectblocks && fileSize < bytesavailable) {
+    if (res == 1 && spaceavailable >= space_needed && fileSize <= bytesavailable) {
         char buffer[fileSize+1]; 
         int bitsRead = 0;
         while ((bitsRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
@@ -189,11 +187,9 @@ void fragmentation_degree() {
 
 
 int defragment() {
-
     struct dir *dir;
     char name[NAME_MAX + 1];
    
-
     dir = dir_open_root();
     if (dir == NULL)
       return 1;
@@ -207,6 +203,7 @@ int defragment() {
         size_of_all_files += fsutil_size(name) ;
         n_files++;
       }
+
     }
     dir_close(dir);
 
@@ -214,18 +211,17 @@ int defragment() {
       return 0;
     }
 
-    const char** fnames = malloc(n_files * sizeof(char*));
-
+    char** fnames = malloc(n_files * sizeof(char*));
     char* buffer =  malloc((size_of_all_files+1 + n_files * 16) * sizeof(char));
     buffer[0] = '\0';
-    
+
+
     struct dir *dir2 = dir_open_root();
     char fname[NAME_MAX + 1];
-    int number = 0;
-
-    while (dir_readdir(dir2, fname) && number < n_files) {
+    int i = 0;
+    while (dir_readdir_inode(dir2, fname) && i < n_files) {
+      
       int size = fsutil_size(fname);
-
       if (size > 512) {
         char text[size + strlen("\n\nEND_OF_FILE\n\n\n") + 1];
         fsutil_seek(fname, 0);
@@ -233,29 +229,32 @@ int defragment() {
         strcat(text, "\n\nEND_OF_FILE\n\n\n");
         strcat(buffer, text);
 
-        fnames[number] = (const char*)strdup(fname);
-        number++;
-        fsutil_rm(fname);
+        fnames[i] = strdup(fname);
+        i++;
       }
     }
     dir_close(dir2);
 
+    for (int i = 0; i < n_files; i++) {
+      fsutil_rm(fnames[i]);
+    }
+
+
     char* start = buffer;
     char* end = NULL;
     int delimiterLen = strlen("END_OF_FILE");
+    char** parts = malloc(n_files * sizeof(char*) + size_of_all_files);
 
-    char** parts = malloc(n_files * sizeof(char*));
     if (!parts) {
         free(buffer);
         return -1;
     }
-    int partsCount = 0;
 
+    int partsCount = 0;
     while ((end = strstr(start, "END_OF_FILE")) != NULL) {
         int partSize = end - start;
         parts[partsCount] = malloc(partSize + 1);
         if (!parts[partsCount]) {
-            // Handle malloc failure for any part
             for (int i = 0; i < partsCount; ++i) {
                 free(parts[i]);
             }
@@ -263,7 +262,6 @@ int defragment() {
             free(buffer);
             return -1;
         }
-
         strncpy(parts[partsCount], start, partSize);
         parts[partsCount][partSize] = '\0'; 
         start = end + delimiterLen; 
@@ -286,12 +284,14 @@ int defragment() {
         partsCount++;
     }
 
-    for (int i = 0; i < partsCount - 1; i++) {
-        fsutil_create(fnames[i], strlen(parts[i])-1);
-        fsutil_write((char*)fnames[i], parts[i], strlen(parts[i])-1);
+    for (int i = 0; i < n_files; i++) {
+        fsutil_create((const char*) fnames[i], strlen(parts[i])-1);
+        fsutil_write(fnames[i], parts[i], strlen(parts[i])-1);
+        free(parts[i]);
     }
     free(buffer); 
     free(fnames);
+    free(parts);
 
     return 0;
 }
@@ -302,19 +302,16 @@ void recover(int flag) {
   if (flag == 0) {            // recover deleted inodes
    
     struct bitmap* bmap = free_map;
-
     int freesectors = 0;
-    int size = 0;
 
     for (int i = 0; i < bitmap_size(bmap); i++) {
 
-      if (!bitmap_test(bmap, i)) { // If the i-th bit is 0 (free sector), gives 1 if removed/empty
-          struct inode *node = inode_open(i); //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
+      if (!bitmap_test(bmap, i)) {    // If the i-th bit is 0 (free sector), gives 1 if removed/empty
+          struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
           struct inode_disk id = node->data;
           struct file* f = file_open(node);
 
           if (id.length > 0 && !id.is_dir && node->sector > 0) {
-            //printf(" at i = %i, sector of node = %i and length of node/file = %i \n", i, node->sector, id.length);
             node->removed = 0;
             bitmap_set(bmap, i, 1);
             freesectors++;
@@ -340,9 +337,7 @@ void recover(int flag) {
           }
           
       }
-      size++;
     }
-    //printf("# of sectors reallocated = %i and after = %i and total loops = %i\n", freesectors, num_free_sectors(), size);
 
 
   } else if (flag == 1) { // recover all non-empty sectors
@@ -355,4 +350,22 @@ void recover(int flag) {
 }
 
 
-  
+void read_indirect_block(block_sector_t indirect_block, char *buffer, int *offset) { 
+  block_sector_t sectors[INDIRECT_BLOCKS_PER_SECTOR]; 
+  buffer_cache_read(indirect_block, &sectors); 
+  for (int i = 0; i < INDIRECT_BLOCKS_PER_SECTOR; i++) { 
+    if (sectors[i] != 0) { 
+      buffer_cache_read(sectors[i], buffer + *offset); 
+      *offset += BLOCK_SECTOR_SIZE; } 
+      } 
+} 
+
+void read_doubly_indirect_block(block_sector_t doubly_indirect_block, char *buffer, int *offset) { 
+  block_sector_t indirect_blocks[INDIRECT_BLOCKS_PER_SECTOR]; 
+  buffer_cache_read(doubly_indirect_block, &indirect_blocks); 
+  for (int i = 0; i < INDIRECT_BLOCKS_PER_SECTOR; i++) { 
+    if (indirect_blocks[i] != 0) { 
+      read_indirect_block(indirect_blocks[i], buffer, offset); 
+      } 
+  }
+} 
