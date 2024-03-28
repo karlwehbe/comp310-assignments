@@ -144,8 +144,8 @@ void fragmentation_degree() {
       struct file* f = filesys_open(name);
       struct inode* node = file_get_inode(f);
 
-      struct bitmap* bmap = free_map;
-      bitmap_mark(bmap, node->sector);
+      //struct bitmap* bmap = free_map;
+      //bitmap_mark(bmap, node->sector);
       
       int sectors_to_read = 0;
       if (fsutil_size(name) % 512 != 0) {
@@ -154,11 +154,10 @@ void fragmentation_degree() {
         sectors_to_read = (fsutil_size(name)/512);
       }
 
-      if (sectors_to_read == 1) {
-        block_sector_t *blocks = get_inode_data_sectors(node);
-        if (blocks[0] != 0) bitmap_mark(bmap, blocks[0]);
-        
-      }
+      //if (sectors_to_read == 1) {
+       // block_sector_t *blocks = get_inode_data_sectors(node);
+        //if (blocks[0] != 0) bitmap_mark(bmap, blocks[0]);
+      //}
       //printf("sectors to read = %i\n", sectors_to_read);
 
       if (sectors_to_read > 1) {
@@ -176,7 +175,7 @@ void fragmentation_degree() {
               place = blocks[i-1];
             }
 
-            if (blocks[i] != 0) bitmap_mark(bmap, blocks[i]);
+            //if (blocks[i] != 0) bitmap_mark(bmap, blocks[i]);
             
             if (blocks[i] - place > 3 && blocks[i] != 0) {
               n_fragmented++;
@@ -192,6 +191,7 @@ void fragmentation_degree() {
     printf("Num fragmentable files: %i\n", n_fragmentable);
     printf("Num fragmented files: %i\n", n_fragmented);
     printf("Fragmentation pct: %f\n", degree);
+    buffer_cache_close();
 }
 
 
