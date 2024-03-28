@@ -346,18 +346,20 @@ void recover(int flag) {
 
     for (int i = 4; i < bitmap_size(bmap); i++) {
 
-      if (bitmap_test(bmap, i)) {    // If the i-th bit is 0 (free sector), gives 1 if removed/empty
+      if (bitmap_test(bmap, i)) {    // If the i-th bit is 1, gives 1 if removed/empty
           struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
           struct inode_disk id = node->data;
           struct file* f = file_open(node);
+          //printf("filename = %s, sector = %i\n" ,node->sector);
 
           if (id.length > 0 && !id.is_dir && node->sector > 4) {
             
            
             char newname[15]; 
-            sprintf(newname, "recovered1-%u", node->sector); 
+            sprintf(newname, "recovered1-%u.txt", node->sector); 
             add_to_file_table(f, newname);
-            
+            //printf("newname = %s\n", newname);
+
             copy_out(newname);
             fsutil_rm(newname);
           }
