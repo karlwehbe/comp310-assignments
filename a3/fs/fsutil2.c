@@ -188,16 +188,6 @@ void fragmentation_degree() {
     printf("Num fragmentable files: %i\n", n_fragmentable);
     printf("Num fragmented files: %i\n", n_fragmented);
     printf("Fragmentation pct: %f\n", degree);
-    //buffer_cache_close();
-
-    int z = 0;
-    struct bitmap* bmap = free_map;
-    for (int i = 0; i < bitmap_size(bmap); i++) {
-      int zo = bitmap_test(bmap, i);
-      printf("%i", zo);
-      if (zo == 0) z++;
-    }
-    printf("\nz = %i\n", z);
 }
 
 
@@ -323,12 +313,17 @@ int defragment() {
 
     fragmentation_degree();
     
-    /*for (int i = 0; i < bitmap_size(bmap); i++) {
+  
+    // succesfully fills bitmap with correct 0 - 1;
+
+    int z = 0;
+    struct bitmap* bmap = free_map;
+    for (int i = 0; i < bitmap_size(bmap); i++) {
       int zo = bitmap_test(bmap, i);
       printf("%i", zo);
-      if (zo == 0) printf("i=%i", i);
-    }*/ 
-    // succesfully fills bitmap with correct 0 - 1;
+      if (zo == 0) z++;
+    }
+    printf("\nfreesectors = %i\n", z);
 
     return 0;
 }
