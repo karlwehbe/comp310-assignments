@@ -300,7 +300,6 @@ int defragment() {
     }
     free(buffer); 
     free(fnames);
-    free(parts);
     //buffer_cache_close();
 
     fragmentation_degree();
