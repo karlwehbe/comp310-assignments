@@ -425,7 +425,10 @@ void recover(int flag) {
                     last_block = blocks[i];
                 }
             }
-            printf("lastblock = %i\n", last_block);
+
+            int remaining_bytes = 512 - (fsutil_size(name) % 512);
+            int filebytes = 512 - remaining_bytes;
+            //printf("lastblock = %i and remaining_bytes = %i\n", last_block, remaining_bytes);
 
             char buffer[1024];
             char newname[18]; 
@@ -433,6 +436,8 @@ void recover(int flag) {
                 
             memset(buffer, 0, sizeof(buffer)); 
             buffer_cache_read(last_block, buffer); 
+
+            memmove(buffer, buffer + filebytes, sizeof(buffer) - filebytes); 
             
             bool isEmpty = true;
             for (size_t j = 0; j < sizeof(buffer); j++) {
@@ -441,6 +446,8 @@ void recover(int flag) {
                     break;
                 }
             }
+
+            //if (isEmpty) printf("Is empty\n");
 
             if (!isEmpty) {
                 FILE* file = fopen(newname, "w");
