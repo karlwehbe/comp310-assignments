@@ -221,7 +221,7 @@ int defragment() {
     struct dir *dir2 = dir_open_root();
     char fname[NAME_MAX + 1];
     int i = 0;
-    while (dir_readdir_inode(dir2, fname) && i < n_files) {
+    while (dir_readdir(dir2, fname) && i < n_files) {
         int size = fsutil_size(fname);
         if (size > 512) {
             char text[size + strlen("END_OF_FILE") + 4];
@@ -291,10 +291,9 @@ int defragment() {
     init_file_table();
 
     for (int i = 0; i < n_files; i++) {
-        fsutil_create((const char*) fnames[i], strlen(parts[i])-1);
-        fsutil_write(fnames[i], parts[i], strlen(parts[i])-1);
-        struct file* f = get_file_by_fname(fnames[i]);
-        add_to_file_table(f, fnames[i]);
+        filesys_create(fnames[i], strlen(parts[i])-1, false);
+        struct file* f = filesys_open(fnames[i]);
+        file_write(f, parts[i], strlen(parts[i])-1);
     }
 
     free(buffer); 
