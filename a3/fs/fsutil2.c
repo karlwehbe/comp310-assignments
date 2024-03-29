@@ -349,6 +349,11 @@ int defragment() {
     }
     
     printf("\nAfter = freesectors = %i and same test = %li and fsutil call = %i\n", z, bitmap_count(free_map, 0, bitmap_size(free_map), 0), fsutil_freespace());
+     for (int i = 0; i < bitmap_size(free_map); i++) {
+      int zo = bitmap_test(free_map, i);
+      printf("%i", zo);
+    }
+    
     return 0;
 }
 
