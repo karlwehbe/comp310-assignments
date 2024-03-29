@@ -288,7 +288,6 @@ int defragment() {
         partsCount++;
     }
 
-    init_file_table();
 
     for (int i = 0; i < n_files; i++) {
         filesys_create(fnames[i], strlen(parts[i])-1, false);
