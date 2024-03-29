@@ -297,7 +297,6 @@ int defragment() {
     for (int i = 0; i < n_files; i++) {
         fsutil_create((const char*) fnames[i], strlen(parts[i])-1);
         fsutil_write(fnames[i], parts[i], strlen(parts[i])-1);
-        free(parts[i]);
     }
     free(buffer); 
     free(fnames);
@@ -305,7 +304,7 @@ int defragment() {
     //buffer_cache_close();
 
     fragmentation_degree();
-    
+
     return 0;
 }
 
