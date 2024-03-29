@@ -307,6 +307,7 @@ int defragment() {
         fsutil_write(fnames[i], parts[i], strlen(parts[i])-1);
         struct file* f = get_file_by_fname(fnames[i]);
         add_to_file_table(f, fnames[i]);
+
     }
     free(buffer); 
     free(fnames);
@@ -322,6 +323,29 @@ int defragment() {
       if (zo == 0) z++;
     }
     printf("\nfreesectors = %i\n", z);
+
+    for (int i = 0; i < bitmap_size(free_map); i++) {
+   
+        struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
+        struct inode_disk id = node->data;
+        struct file* f = file_open(node);
+
+        if (id.length > 0 && !id.is_dir && node->sector > 0) {
+          node->removed = 0;
+          bitmap_set(bmap, i, 1);
+          
+
+          int sectors_to_read = 0;
+          if (id.length % 512 != 0) {
+            sectors_to_read = i + (id.length/512 + 1);
+          } else {
+            sectors_to_read = i + (id.length/512);
+          }
+           for (int j = i; j < sectors_to_read; j++) {
+            bitmap_set(bmap, j, 1);
+          }
+        }
+    }
 
     return 0;
 }
