@@ -424,41 +424,54 @@ void recover(int flag) {
                 }
             }
 
-            int remaining_bytes = 512 - (fsutil_size(name) % 512);
-            int filebytes = 512 - remaining_bytes;
-            //printf("lastblock = %i and remaining_bytes = %i\n", last_block, remaining_bytes);
-
-            char buffer[1024];
-            char newname[18]; 
-            sprintf(newname, "recovered2-%s.txt", name); 
-
-            char secondbuffer[remaining_bytes+1];
+            if (bitmap_test(free_map, last_block)) {
+                int remaining_bytes = 512 - (fsutil_size(name) % 512);
+                int filebytes = 512 - remaining_bytes;
                 
-            memset(buffer, 0, sizeof(buffer)); 
-            buffer_cache_read(last_block, buffer); 
-            memmove(buffer, buffer + filebytes, sizeof(buffer) - filebytes); 
-            
-            fsutil_seek(name, filebytes);
-            fsutil_read(name, secondbuffer, remaining_bytes);
+                printf("lastblock = %i and remaining_bytes = %i and filebytes = %i\n", last_block, remaining_bytes, filebytes);
 
+                char buffer[1024];
+                memset(buffer, 0, sizeof(buffer)); 
+                buffer_cache_read(last_block, buffer); 
+                memmove(buffer, buffer + filebytes, sizeof(buffer) - filebytes); 
+                
+                char secondbuffer[remaining_bytes+1];
+                struct file* f = get_file_by_fname(name);
+                file_seek(f, filebytes);
+                fsutil_read(name, secondbuffer, remaining_bytes);
+                
+                printf("second buffer = %s\n", secondbuffer);
 
-            bool isEmpty = true;
-            for (size_t j = 0; j < sizeof(buffer); j++) {
-                if (buffer[j] != 0) {
-                    isEmpty = false;
-                    break;
+                bool isEmpty = true;
+                for (size_t j = 0; j < sizeof(buffer); j++) {
+                    if (buffer[j] != 0) {
+                        isEmpty = false;
+                        break;
+                    }
                 }
-            }
-            //if (isEmpty) printf("Is empty\n");
-            
-            if (!isEmpty) {
-                FILE* file = fopen(newname, "w");
-                fputs(buffer, file);
-                fputs(secondbuffer, file);
-                fclose(file);
-            }
-        } 
-        
+
+                bool isEmpty2 = true;
+                for (size_t j = 0; j < sizeof(secondbuffer); j++) {
+                    if (secondbuffer[j] != 0) {
+                        isEmpty2 = false;
+                        break;
+                    }
+                }
+
+                if (isEmpty) printf("Is empty\n");
+                if (isEmpty2) printf("Is empty2\n");
+                
+                char newname[18]; 
+                sprintf(newname, "recovered2-%s.txt", name); 
+
+                if (!isEmpty || !isEmpty2) {
+                    FILE* file = fopen(newname, "w");
+                    fputs(buffer, file);
+                    fputs(secondbuffer, file);
+                    fclose(file);
+                }
+            } 
+        }
         dir_close(dir);
     }
 }
