@@ -33,24 +33,16 @@ int copy_in(char *fname) {
     int bytesavailable = 0;
     
     if (spaceavailable > 0) {
-        if (fileSize <= 123*512) {
-            bytesavailable = (spaceavailable - 1) * 512;
-            newSize = fileSize;
+        if (fileSize <= 123*512) { bytesavailable = (spaceavailable - 1) * 512; }
+        
+        else if (fileSize <= 123*512 + 128*512) { bytesavailable = (spaceavailable - 2) * 512; }
             
-        } else if (fileSize <= 123*512 + 128*512) {
-            bytesavailable = (spaceavailable - 2) * 512;
-            if (bytesavailable > fileSize) {
-                newSize = fileSize;
-            } else { 
-                newSize = bytesavailable;
-            }
-        } else if (fileSize > 123*512 + 128*512) {
-            bytesavailable = (spaceavailable - 17) * 512 - 1;
-            if (bytesavailable > fileSize) {
-                newSize = fileSize;
-            } else { 
-                newSize = bytesavailable;
-            }
+        else if (fileSize > 123*512 + 128*512) { bytesavailable = (spaceavailable - 17) * 512 - 1; }
+
+        if (bytesavailable > fileSize) {
+            newSize = fileSize;
+        } else { 
+            newSize = bytesavailable;
         }
     }
 
@@ -60,19 +52,19 @@ int copy_in(char *fname) {
         return 2;
     }
 
+    if (newSize < fileSize) {
+        printf("Warning: could only write %d out of %i bytes (reached end of file)\n", newSize + 1, fileSize);
+    }
+
     char buffer[newSize];
     long bytesWritten = 0;
     size_t bytesRead;
 
-     while (bytesWritten < bytesavailable && (bytesRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
-            int writeResult = fsutil_write(fname, buffer, bytesRead+1);
-            bytesWritten += writeResult;
-        }
-        bytesWritten += bytesRead;
-
-    if (newSize < fileSize) {
-        printf("Warning: could only write %d out of %i bytes (reached end of file)\n", newSize, fileSize);
+    for (int i = 0; i < newSize; i++) {
+        buffer[i] = (char) fgetc(source);
     }
+
+    fsutil_write(fname, buffer, newSize + 1);
 
     fclose(source);
     return 0;
