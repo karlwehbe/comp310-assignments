@@ -290,7 +290,7 @@ int defragment() {
 
 
     for (int i = 0; i < n_files; i++) {
-        filesys_create(fnames[i], strlen(parts[i])-1, false);
+        fsutil_create((const char*) fnames[i], strlen(parts[i])-1);
         struct file* f = filesys_open(fnames[i]);
         file_write(f, parts[i], strlen(parts[i])-1);
     }
