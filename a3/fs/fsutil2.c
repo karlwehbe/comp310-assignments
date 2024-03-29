@@ -225,8 +225,7 @@ int defragment() {
         int size = fsutil_size(fname);
         if (size > 512) {
             char text[size + strlen("END_OF_FILE") + 4];
-            filesys_open(fname);
-            struct file* f = get_file_by_fname(fname);
+            struct file* f = filesys_open(fname);
             file_seek(f, 0);
             file_read(f, text, size);
             strcat(text, "END_OF_FILE");
