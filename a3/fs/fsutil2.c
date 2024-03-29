@@ -330,6 +330,7 @@ int defragment() {
           struct file* f = file_open(node);
 
           if (id.length > 0 && !id.is_dir && node->sector > 0) {
+
             node->removed = 0;
             bitmap_set(free_map, i, 1);
             
@@ -344,6 +345,8 @@ int defragment() {
             for (int j = i; j < sectors_to_read; j++) {
                 bitmap_set(free_map, j, 1);
             }
+
+            i+=sectors_to_read;
           }
       }
     }
