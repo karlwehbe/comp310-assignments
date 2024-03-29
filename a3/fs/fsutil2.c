@@ -26,6 +26,7 @@ int copy_in(char *fname) {
     int fileSize = ftell(source);
     rewind(source);
 
+
     int spaceavailable = fsutil_freespace();
     int newSize = 0;
 
@@ -38,10 +39,18 @@ int copy_in(char *fname) {
             
         } else if (fileSize <= 123*512 + 128*512) {
             bytesavailable = (spaceavailable - 2) * 512;
-            newSize = bytesavailable;
+            if (bytesavailable > fileSize) {
+                newSize = fileSize;
+            } else { 
+                newSize = bytesavailable;
+            }
         } else if (fileSize > 123*512 + 128*512) {
-            bytesavailable = (spaceavailable - 18) * 512;
-            newSize = bytesavailable;
+            bytesavailable = (spaceavailable - 17) * 512 - 1;
+            if (bytesavailable > fileSize) {
+                newSize = fileSize;
+            } else { 
+                newSize = bytesavailable;
+            }
         }
     }
 
@@ -51,7 +60,7 @@ int copy_in(char *fname) {
         return 2;
     }
 
-    char buffer[newSize+1];
+    char buffer[newSize];
     long bytesWritten = 0;
     size_t bytesRead;
 
