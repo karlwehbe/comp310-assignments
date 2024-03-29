@@ -417,9 +417,7 @@ void recover(int flag) {
             }
       
             block_sector_t *blocks = get_inode_data_sectors(node); 
-
             int last_block = 0;
-
             for (int i = 0; i < sectors_to_read; i++) {
                 if (blocks[i] != 0) {
                     last_block = blocks[i];
@@ -433,12 +431,17 @@ void recover(int flag) {
             char buffer[1024];
             char newname[18]; 
             sprintf(newname, "recovered2-%s.txt", name); 
+
+            char secondbuffer[remaining_bytes+1];
                 
             memset(buffer, 0, sizeof(buffer)); 
             buffer_cache_read(last_block, buffer); 
-
             memmove(buffer, buffer + filebytes, sizeof(buffer) - filebytes); 
             
+            fsutil_seek(name, filebytes);
+            fsutil_read(name, secondbuffer, remaining_bytes);
+
+
             bool isEmpty = true;
             for (size_t j = 0; j < sizeof(buffer); j++) {
                 if (buffer[j] != 0) {
@@ -446,12 +449,12 @@ void recover(int flag) {
                     break;
                 }
             }
-
             //if (isEmpty) printf("Is empty\n");
-
+            
             if (!isEmpty) {
                 FILE* file = fopen(newname, "w");
                 fputs(buffer, file);
+                fputs(secondbuffer, file);
                 fclose(file);
             }
         } 
