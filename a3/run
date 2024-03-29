@@ -3,4 +3,4 @@
 make clean
 make myshell framesize=1000 varmemsize=1000
 
-./myshell blank.dsk -f
+./myshell recover11.dsk 
