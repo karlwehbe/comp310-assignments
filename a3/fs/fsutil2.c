@@ -242,22 +242,18 @@ int defragment() {
     }
     dir_close(dir2);
 
+
+    for (int i = 0; i < n_files; i++) {
+      fsutil_rm(fnames[i]);
+    }
+
+    free_file_table(); 
+    
     /*struct bitmap* bmap = free_map;
     for (int i = 0; i < bitmap_size(bmap); i++) {
       int zo = bitmap_test(bmap, i);
       printf("%i", zo);
     }*/
-
-
-    for (int i = 0; i < n_files; i++) {
-      fsutil_rm(fnames[i]);
-    }
-   
-    
-    /*for (int i = 0; i < bitmap_size(bmap); i++) {
-      int zo = bitmap_test(bmap, i);
-      printf("%i", zo);
-    } */
     // successfully removes bitmaps
 
     char* start = buffer;
@@ -304,7 +300,7 @@ int defragment() {
         partsCount++;
     }
 
-    free_file_table();
+    init_file_table();
 
     for (int i = 0; i < n_files; i++) {
         fsutil_create((const char*) fnames[i], strlen(parts[i])-1);
