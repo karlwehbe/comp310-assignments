@@ -200,15 +200,10 @@ int defragment() {
     dir = dir_open_root();
     if (dir == NULL) return 1;
 
-    int size_of_all_files = 0;
     int n_files = 0;
     
     while (dir_readdir(dir, name)) {
-      int size = fsutil_size(name);
-      if (size > 512) {
-          size_of_all_files += fsutil_size(name) ;
           n_files++;
-      }
     }
     dir_close(dir);
 
@@ -216,9 +211,9 @@ int defragment() {
         return 0;
     }
 
-     struct newfiles* files = malloc(n_files * sizeof(struct newfiles));
+    struct newfiles* files = malloc(n_files * sizeof(struct newfiles));
     if (files == NULL) {
-        return -1; // Memory allocation failed
+        return -1;
     }
 
     struct dir *dir2 = dir_open_root();
@@ -226,18 +221,14 @@ int defragment() {
     int i = 0;
     while (dir_readdir(dir2, fname) && i < n_files) {
         int size = fsutil_size(fname);
-        if (size > 512) {
-            files[i].content = malloc(size + strlen("END_OF_FILE") + 4);
-            files[i].name = strdup(name);
-            files[i].size = size;
+        files[i].content = malloc(size + 4);
+        files[i].name = strdup(fname);
+        files[i].size = size;
 
-            struct file* f = filesys_open(name);
-            file_seek(f, 0);
-            file_read(f, files[i].content, size);
-            strcat(files[i].content, "END_OF_FILE");
-
-            i++;
-        }
+        struct file* f = filesys_open(fname);
+        file_seek(f, 0);
+        file_read(f, files[i].content, size);
+        i++;
     }
     dir_close(dir2);
 
@@ -253,8 +244,6 @@ int defragment() {
     }
 
     free(files);
-
-    return 0;
     return 0;
 }
 
