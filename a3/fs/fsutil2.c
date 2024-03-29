@@ -380,33 +380,31 @@ void recover(int flag) {
     for (int i = 4; i < bitmap_size(free_map); i++) {
 
         if (bitmap_test(free_map, i)) {    // If the i-th bit is 1, gives 1.
-            struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
-            struct inode_disk id = node->data;
-            struct file* f = file_open(node);
-            //printf("sector = %i\n", node->sector);
 
-            if (id.length > 0 && !id.is_dir) {
+              /*struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
+              struct inode_disk id = node->data;
+              struct file* f = file_open(node);
+              */
+              char buffer[1024];
+              char newname[18]; 
+              sprintf(newname, "recovered1-%u.txt", i); 
               
-              int sectors_to_read = 0;
-              if (id.length % 512 != 0) {
-                sectors_to_read = id.length/512 + 1;
-              } else {
-                sectors_to_read = id.length/512;
+              memset(buffer, 0, sizeof(buffer)); // Ensure buffer is zeroed out.
+              buffer_cache_read(i, buffer); // Read sector into buffer
+            
+              bool isEmpty = true;
+              for (size_t j = 0; j < sizeof(buffer); j++) {
+                  if (buffer[j] != 0) {
+                      isEmpty = false;
+                      break;
+                  }
               }
 
-              //printf("before i=%i\n", i);
-              i += sectors_to_read;
-              //printf("after i=%i\n", i);
-
-              char newname[17]; 
-              sprintf(newname, "recovered1-%u.txt", node->sector); 
-              add_to_file_table(f, newname);
-              //printf("newname = %s\n", newname);
-
-              copy_out(newname);
-              remove_from_file_table(newname);
-              fsutil_rm(newname);
-            }
+              if (!isEmpty) {
+                FILE* file = fopen(newname, "w");
+                fputs(buffer, file);
+                fclose(file);
+              }
         }
     } 
     
