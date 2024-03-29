@@ -225,8 +225,10 @@ int defragment() {
         int size = fsutil_size(fname);
         if (size > 512) {
             char text[size + strlen("END_OF_FILE") + 4];
-            fsutil_seek(fname, 0);
-            fsutil_read(fname, text, size);
+            filesys_open(fname);
+            struct file* f = get_file_by_fname(fname);
+            file_seek(f, 0);
+            file_read(f, text, size);
             strcat(text, "END_OF_FILE");
             strcat(buffer, text);
 
@@ -242,12 +244,6 @@ int defragment() {
         remove_from_file_table(fnames[i]);
     }
   
-    /*struct bitmap* bmap = free_map;
-    for (int i = 0; i < bitmap_size(bmap); i++) {
-      int zo = bitmap_test(bmap, i);
-      printf("%i", zo);
-    }*/
-    // successfully removes bitmaps
 
     char* start = buffer;
     char* end = NULL;
@@ -305,22 +301,6 @@ int defragment() {
     free(buffer); 
     free(fnames);
   
-    
-    // succesfully fills bitmap with correct 0 - 1;
-
-    int z = 0;
-    for (int i = 0; i < bitmap_size(free_map); i++) {
-      int zo = bitmap_test(free_map, i);
-      printf("%i", zo);
-      if (zo == 0) z++;
-    }
-    printf("\nfreesectors = %i and same test = %li\n", z, bitmap_count(free_map, 0, bitmap_size(free_map), 0));
-    
-    printf("\nAfter = freesectors = %i and same test = %li and fsutil call = %i\n", z, bitmap_count(free_map, 0, bitmap_size(free_map), 0), fsutil_freespace());
-     for (int i = 0; i < bitmap_size(free_map); i++) {
-      int zo = bitmap_test(free_map, i);
-      printf("%i", zo);
-    }
     
     return 0;
 }
