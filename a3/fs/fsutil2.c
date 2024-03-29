@@ -164,7 +164,7 @@ void fragmentation_degree() {
         block_sector_t *blocks = get_inode_data_sectors(node);
 
         for (int i = 0; i < sectors_to_read; i++) {
-            //printf("filename = %s, size = %i, block[i] = %i\n", name, sectors_to_read, blocks[i]);
+            printf("filename = %s, size = %i, block[i] = %i\n", name, sectors_to_read, blocks[i]);
             int place = 0;
             if (i == 0) {
               place = blocks[0];
@@ -229,10 +229,10 @@ int defragment() {
       
       int size = fsutil_size(fname);
       if (size > 512) {
-        char text[size + strlen("\n\nEND_OF_FILE\n\n\n") + 1];
+        char text[size + strlen("END_OF_FILE") + 4];
         fsutil_seek(fname, 0);
         fsutil_read(fname, text, size);
-        strcat(text, "\n\nEND_OF_FILE\n\n\n");
+        strcat(text, "END_OF_FILE");
         strcat(buffer, text);
 
         fnames[i] = strdup(fname);
@@ -244,9 +244,10 @@ int defragment() {
 
     for (int i = 0; i < n_files; i++) {
       fsutil_rm(fnames[i]);
+      remove_from_file_table(fnames[i]);
     }
 
-    free_file_table(); 
+    
     
     /*struct bitmap* bmap = free_map;
     for (int i = 0; i < bitmap_size(bmap); i++) {
@@ -267,7 +268,7 @@ int defragment() {
 
     int partsCount = 0;
     while ((end = strstr(start, "END_OF_FILE")) != NULL) {
-        int partSize = end - start;
+        int partSize = end - start + 2;
         parts[partsCount] = malloc(partSize + 1);
         if (!parts[partsCount]) {
             for (int i = 0; i < partsCount; ++i) {
@@ -309,11 +310,8 @@ int defragment() {
     }
     free(buffer); 
     free(fnames);
-    
-
-    fragmentation_degree();
-    
   
+    
     // succesfully fills bitmap with correct 0 - 1;
 
     int z = 0;
