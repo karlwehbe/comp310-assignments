@@ -316,7 +316,6 @@ int interpreter(char *command_args[], int args_size, char *cwd) {
   
     if (status == 1) return handle_error(FILE_DOES_NOT_EXIST);
     if (status == 2) return handle_error(FILE_CREATION_ERROR);
-    if (status == 3) return handle_error(NO_MEM_SPACE);
     return status;
 
   } 

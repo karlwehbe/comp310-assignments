@@ -19,65 +19,58 @@
 
 int copy_in(char *fname) {
 
-    // still need to add extreme cases, if no space in memory
-    FILE *source;
-    int fileSize;
-    int bitsWritten = 0;
-
-
-    source = fopen(fname, "r");
+    FILE *source = fopen(fname, "r");
     if (!source) return 1;
 
     fseek(source, 0, SEEK_END);
-    fileSize = ftell(source);
+    int fileSize = ftell(source);
     rewind(source);
-    
-    int res = fsutil_create(fname, fileSize); 
+
     int spaceavailable = fsutil_freespace();
+    int newSize = 0;
 
-    int sectors_to_read = 0;
-    if (fileSize % 512 != 0) {
-        sectors_to_read = (fileSize/512) + 2;
-    } else {
-        sectors_to_read = (fileSize/512) + 1;
+    int bytesavailable = 0;
+    
+    if (spaceavailable > 0) {
+        if (fileSize <= 123*512) {
+            bytesavailable = (spaceavailable - 1) * 512;
+            newSize = fileSize;
+            
+        } else if (fileSize <= 123*512 + 128*512) {
+            bytesavailable = (spaceavailable - 2) * 512;
+            newSize = bytesavailable;
+        } else if (fileSize > 123*512 + 128*512) {
+            bytesavailable = (spaceavailable - 18) * 512;
+            newSize = bytesavailable;
+        }
     }
 
-    int space_needed = sectors_to_read;
-    //printf("DEBUG : size = %i and space needed = %i\n", fileSize, space_needed);
-
-    int bytesavailable = (spaceavailable - 1) * 512;
-
-
-    if (res == 1 && spaceavailable >= space_needed && fileSize <= bytesavailable) {
-        char buffer[fileSize+1]; 
-        int bitsRead = 0;
-        while ((bitsRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
-            int writeResult = fsutil_write(fname, buffer, bitsRead+1);
-            bitsWritten += writeResult;
-            if (writeResult < bitsRead) {
-                printf("Warning: could only write %d out of %i bytes (reached end of file)\n", bitsWritten, fileSize);
-                break; 
-            }
-        }
-
-        //printf("bits written = %i\n ", bitsWritten);
-
+    int res = fsutil_create(fname, newSize);
+    if (res != 1) {
         fclose(source);
-
-        if (bitsWritten < fileSize) {
-            return 3;
-        } else {
-            return 0;
-        }
-    } else {
-      return 2;
+        return 2;
     }
+
+    char buffer[newSize+1];
+    long bytesWritten = 0;
+    size_t bytesRead;
+
+     while (bytesWritten < bytesavailable && (bytesRead = fread(buffer, 1, sizeof(buffer), source)) > 0) {
+            int writeResult = fsutil_write(fname, buffer, bytesRead+1);
+            bytesWritten += writeResult;
+        }
+        bytesWritten += bytesRead;
+
+    if (newSize < fileSize) {
+        printf("Warning: could only write %d out of %i bytes (reached end of file)\n", newSize, fileSize);
+    }
+
+    fclose(source);
+    return 0;
 }
 
 int copy_out(char *fname) {
-
     struct file *f = filesys_open(fname);
-    
     int size = fsutil_size(fname);
     char* buffer =  malloc((size+1) * sizeof(char));
     memset(buffer, 0, size + 1);
@@ -87,7 +80,6 @@ int copy_out(char *fname) {
 
     fsutil_seek(fname, 0);
     fsutil_read(fname, buffer, size);
-
 
     FILE* file = fopen(fname, "w");
     if (file == NULL) {
@@ -104,29 +96,28 @@ int copy_out(char *fname) {
 }
 
 void find_file(char *pattern) {
-  struct dir *dir;
-  char name[NAME_MAX + 1];
+    struct dir *dir;
+    char name[NAME_MAX + 1];
 
-  dir = dir_open_root();
-  if (dir == NULL)
-    return ;
+    dir = dir_open_root();
+    if (dir == NULL)
+        return ;
 
-  while (dir_readdir(dir, name)) {
-    int size = fsutil_size(name);
-    char* buffer =  malloc((size+1) * sizeof(char));
-    memset(buffer, 0, size + 1);
-    fsutil_read(name, buffer, size);
+    while (dir_readdir(dir, name)) {
+        int size = fsutil_size(name);
+        char* buffer =  malloc((size+1) * sizeof(char));
+        memset(buffer, 0, size + 1);
+        fsutil_read(name, buffer, size);
 
-    fsutil_seek(name, 0);
-    fsutil_read(name, buffer, size);
+        fsutil_seek(name, 0);
+        fsutil_read(name, buffer, size);
 
-    if (strstr(buffer, pattern)) {
-        printf("%s\n", name);
+        if (strstr(buffer, pattern)) {
+            printf("%s\n", name);
+        }
     }
-  }
-
-  dir_close(dir);
-  return;
+    dir_close(dir);
+    return;
 }
 
 
@@ -141,32 +132,21 @@ void fragmentation_degree() {
     int n_fragmented = 0;
     int n_fragmentable = 0;
 
-
     while (dir_readdir(dir, name)) {
-      struct file* f = filesys_open(name);
-      struct inode* node = file_get_inode(f);
-
-      //struct bitmap* bmap = free_map;
-      //bitmap_mark(bmap, node->sector);
-      
-      int sectors_to_read = 0;
-      if (fsutil_size(name) % 512 != 0) {
-          sectors_to_read = (fsutil_size(name)/512) + 1;
-      } else {
-          sectors_to_read = (fsutil_size(name)/512);
-      }
-
+        struct file* f = filesys_open(name);
+        struct inode* node = file_get_inode(f);
+        
+        int sectors_to_read = 0;
+        if (fsutil_size(name) % 512 != 0) {
+            sectors_to_read = (fsutil_size(name)/512) + 1;
+        } else {
+            sectors_to_read = (fsutil_size(name)/512);
+        }
     
-      //printf("sectors to read = %i\n", sectors_to_read);
-
         if (sectors_to_read > 1) {
-      
             n_fragmentable++;
-            
             block_sector_t *blocks = get_inode_data_sectors(node);
-
             for (int i = 0; i < sectors_to_read; i++) {
-                //printf("filename = %s, size = %i, block[i] = %i\n", name, sectors_to_read, blocks[i]);
                 int place = 0;
                 if (i == 0) {
                 place = blocks[0];
@@ -174,8 +154,6 @@ void fragmentation_degree() {
                 place = blocks[i-1];
                 }
 
-                //if (blocks[i] != 0) bitmap_mark(bmap, blocks[i]);
-                
                 if (blocks[i] - place > 3 && blocks[i] != 0) {
                     n_fragmented++;
                     break;
@@ -201,7 +179,6 @@ int defragment() {
     if (dir == NULL) return 1;
 
     int n_files = 0;
-    
     while (dir_readdir(dir, name)) {
           n_files++;
     }
@@ -242,7 +219,6 @@ int defragment() {
         free(files[i].name);
         free(files[i].content);
     }
-
     free(files);
     return 0;
 }
@@ -253,73 +229,69 @@ void recover(int flag) {
   if (flag == 0) {            // recover deleted inodes
    
     int freesectors = 0;
-
     for (int i = 0; i < bitmap_size(free_map); i++) {
 
-      if (!bitmap_test(free_map, i)) {    // If the i-th bit is 0 (free sector), gives 1 if removed/empty
-          struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
-          struct inode_disk id = node->data;
-          struct file* f = file_open(node);
+        if (!bitmap_test(free_map, i)) {    // If the i-th bit is 0 (free sector), gives 1 if removed/empty
+            struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
+            struct inode_disk id = node->data;
+            struct file* f = file_open(node);
 
-          if (id.length > 0 && !id.is_dir && node->sector > 0) {
-              node->removed = 0;
-              bitmap_set(free_map, i, 1);
-              freesectors++;
-
-            int sectors_to_read = 0;
-            if (id.length % 512 != 0) {
-                sectors_to_read = i + (id.length/512 + 1);
-            } else {
-                sectors_to_read = i + (id.length/512);
-            }
-
-            for (int j = i; j < sectors_to_read; j++) {
-                bitmap_set(free_map, j, 1);
+            if (id.length > 0 && !id.is_dir && node->sector > 0) {
+                node->removed = 0;
+                bitmap_set(free_map, i, 1);
                 freesectors++;
-            }
 
-            char newname[15]; 
-            sprintf(newname, "recovered0-%u", node->sector); 
-            add_to_file_table(f, newname);
-            
-            struct dir* root = dir_open_root();
-            dir_add(root, newname, i, false);
-          }
-          
-      }
+                int sectors_to_read = 0;
+                if (id.length % 512 != 0) {
+                    sectors_to_read = i + (id.length/512 + 1);
+                } else {
+                    sectors_to_read = i + (id.length/512);
+                }
+
+                for (int j = i; j < sectors_to_read; j++) {
+                    bitmap_set(free_map, j, 1);
+                    freesectors++;
+                }
+
+                char newname[15]; 
+                sprintf(newname, "recovered0-%u", node->sector); 
+                add_to_file_table(f, newname);
+                
+                struct dir* root = dir_open_root();
+                dir_add(root, newname, i, false);
+            }
+        }
     }
 
 
   } else if (flag == 1) { // recover all non-empty sectors
   
-    for (int i = 4; i < bitmap_size(free_map); i++) {
+        for (int i = 4; i < bitmap_size(free_map); i++) {
 
-        if (bitmap_test(free_map, i)) {    // If the i-th bit is 1, gives 1.
+            if (bitmap_test(free_map, i)) {    // If the i-th bit is 1, gives 1.
+                char buffer[1024];
+                char newname[18]; 
+                sprintf(newname, "recovered1-%u.txt", i); 
+                memset(buffer, 0, sizeof(buffer)); 
+                buffer_cache_read(i, buffer); 
+            
+                bool isEmpty = true;
+                for (size_t j = 0; j < sizeof(buffer); j++) {
+                    if (buffer[j] != 0) {
+                        isEmpty = false;
+                        break;
+                    }
+                }
 
-            char buffer[1024];
-            char newname[18]; 
-            sprintf(newname, "recovered1-%u.txt", i); 
-            memset(buffer, 0, sizeof(buffer)); 
-            buffer_cache_read(i, buffer); 
-        
-            bool isEmpty = true;
-            for (size_t j = 0; j < sizeof(buffer); j++) {
-                if (buffer[j] != 0) {
-                    isEmpty = false;
-                    break;
+                if (!isEmpty) {
+                    FILE* file = fopen(newname, "w");
+                    fputs(buffer, file);
+                    fclose(file);
                 }
             }
-
-            if (!isEmpty) {
-                FILE* file = fopen(newname, "w");
-                fputs(buffer, file);
-                fclose(file);
-            }
-        }
-    } 
+        } 
     
   } else if (flag == 2) { // data past end of file.
-
         struct dir *dir;
         char name[NAME_MAX + 1];
 
@@ -357,7 +329,6 @@ void recover(int flag) {
                 buffer_cache_read(last_block, buffer); 
                 memmove(buffer, buffer + file_sectorbytes, sizeof(buffer) - file_sectorbytes); 
                 
-
                 bool isEmpty = true;
                 for (size_t j = 0; j < sizeof(buffer); j++) {
                     if (buffer[j] != 0) {
@@ -365,8 +336,6 @@ void recover(int flag) {
                         break;
                     }
                 }
-
-                if (isEmpty) printf("Is empty\n");
         
                 char newname[18]; 
                 sprintf(newname, "recovered2-%s.txt", name); 
@@ -383,23 +352,3 @@ void recover(int flag) {
 }
 
 
-void read_indirect_block(block_sector_t indirect_block, char *buffer, int *offset) { 
-    block_sector_t sectors[INDIRECT_BLOCKS_PER_SECTOR]; 
-    buffer_cache_read(indirect_block, &sectors); 
-    for (int i = 0; i < INDIRECT_BLOCKS_PER_SECTOR; i++) { 
-        if (sectors[i] != 0) { 
-            buffer_cache_read(sectors[i], buffer + *offset); 
-            *offset += BLOCK_SECTOR_SIZE; 
-        } 
-    } 
-} 
-
-void read_doubly_indirect_block(block_sector_t doubly_indirect_block, char *buffer, int *offset) { 
-    block_sector_t indirect_blocks[INDIRECT_BLOCKS_PER_SECTOR]; 
-    buffer_cache_read(doubly_indirect_block, &indirect_blocks); 
-    for (int i = 0; i < INDIRECT_BLOCKS_PER_SECTOR; i++) { 
-        if (indirect_blocks[i] != 0) { 
-            read_indirect_block(indirect_blocks[i], buffer, offset); 
-        } 
-    }
-} 
