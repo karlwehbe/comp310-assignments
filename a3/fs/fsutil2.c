@@ -18,14 +18,12 @@
 
 
 int copy_in(char *fname) {
-
     FILE *source = fopen(fname, "r");
     if (!source) return 1;
 
     fseek(source, 0, SEEK_END);
     int fileSize = ftell(source);
     rewind(source);
-
 
     int spaceavailable = fsutil_freespace();
     int newSize = 0;
@@ -46,7 +44,7 @@ int copy_in(char *fname) {
         }
     }
 
-    int res = fsutil_create(fname, newSize);
+    int res = fsutil_create(fname, 20);
     if (res != 1) {
         fclose(source);
         return 2;
@@ -57,13 +55,10 @@ int copy_in(char *fname) {
     }
 
     char buffer[newSize];
-    long bytesWritten = 0;
-    size_t bytesRead;
-
     for (int i = 0; i < newSize; i++) {
-        buffer[i] = (char) fgetc(source);
+        buffer[i] = fgetc(source);
     }
-
+    
     fsutil_write(fname, buffer, newSize + 1);
 
     fclose(source);
