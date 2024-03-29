@@ -189,6 +189,11 @@ void fragmentation_degree() {
     printf("Num fragmented files: %i\n", n_fragmented);
     printf("Fragmentation pct: %f\n", degree);
     //buffer_cache_close();
+    struct bitmap* bmap = free_map;
+    for (int i = 0; i < bitmap_size(bmap); i++) {
+      int zo = bitmap_test(bmap, i);
+      printf("%i", zo);
+    }
 }
 
 
