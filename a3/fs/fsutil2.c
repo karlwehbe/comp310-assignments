@@ -35,9 +35,9 @@ int copy_in(char *fname) {
 
     int sectors_to_read = 0;
     if (fileSize % 512 != 0) {
-      sectors_to_read = (fileSize/512) + 2;
+        sectors_to_read = (fileSize/512) + 2;
     } else {
-      sectors_to_read = (fileSize/512) + 1;
+        sectors_to_read = (fileSize/512) + 1;
     }
 
     int space_needed = sectors_to_read;
@@ -89,8 +89,8 @@ int copy_out(char *fname) {
 
     FILE* file = fopen(fname, "w");
     if (file == NULL) {
-      fsutil_seek(fname, offset);    // take pointer back to original place.
-      return 1;
+        fsutil_seek(fname, offset);    // take pointer back to original place.
+        return 1;
     }
 
     fputs(buffer, file);
@@ -134,7 +134,7 @@ void fragmentation_degree() {
 
     dir = dir_open_root();
     if (dir == NULL)
-      return ;
+        return ;
 
     int n_fragmented = 0;
     int n_fragmentable = 0;
@@ -149,38 +149,37 @@ void fragmentation_degree() {
       
       int sectors_to_read = 0;
       if (fsutil_size(name) % 512 != 0) {
-        sectors_to_read = (fsutil_size(name)/512) + 1;
+          sectors_to_read = (fsutil_size(name)/512) + 1;
       } else {
-        sectors_to_read = (fsutil_size(name)/512);
+          sectors_to_read = (fsutil_size(name)/512);
       }
 
     
       //printf("sectors to read = %i\n", sectors_to_read);
 
-      if (sectors_to_read > 1) {
+        if (sectors_to_read > 1) {
       
-        n_fragmentable++;
-        
-        block_sector_t *blocks = get_inode_data_sectors(node);
-
-        for (int i = 0; i < sectors_to_read; i++) {
-            //printf("filename = %s, size = %i, block[i] = %i\n", name, sectors_to_read, blocks[i]);
-            int place = 0;
-            if (i == 0) {
-              place = blocks[0];
-            } else {
-              place = blocks[i-1];
-            }
-
-            //if (blocks[i] != 0) bitmap_mark(bmap, blocks[i]);
+            n_fragmentable++;
             
-            if (blocks[i] - place > 3 && blocks[i] != 0) {
-              n_fragmented++;
-              //printf("fragmentable increased\n");
-              break;
+            block_sector_t *blocks = get_inode_data_sectors(node);
+
+            for (int i = 0; i < sectors_to_read; i++) {
+                //printf("filename = %s, size = %i, block[i] = %i\n", name, sectors_to_read, blocks[i]);
+                int place = 0;
+                if (i == 0) {
+                place = blocks[0];
+                } else {
+                place = blocks[i-1];
+                }
+
+                //if (blocks[i] != 0) bitmap_mark(bmap, blocks[i]);
+                
+                if (blocks[i] - place > 3 && blocks[i] != 0) {
+                    n_fragmented++;
+                    break;
+                }
             }
         }
-      }
     }
     dir_close(dir);
 
@@ -197,8 +196,7 @@ int defragment() {
     char name[NAME_MAX + 1];
    
     dir = dir_open_root();
-    if (dir == NULL)
-      return 1;
+    if (dir == NULL) return 1;
 
     int size_of_all_files = 0;
     int n_files = 0;
@@ -206,49 +204,44 @@ int defragment() {
     while (dir_readdir(dir, name)) {
       int size = fsutil_size(name);
       if (size > 512) {
-        size_of_all_files += fsutil_size(name) ;
-        n_files++;
+          size_of_all_files += fsutil_size(name) ;
+          n_files++;
       }
-
     }
     dir_close(dir);
 
     if (n_files == 0) {
-      return 0;
+        return 0;
     }
 
     char** fnames = malloc(n_files * sizeof(char*));
     char* buffer =  malloc((size_of_all_files+1 + n_files * 16) * sizeof(char));
     buffer[0] = '\0';
 
-
     struct dir *dir2 = dir_open_root();
     char fname[NAME_MAX + 1];
     int i = 0;
     while (dir_readdir_inode(dir2, fname) && i < n_files) {
-      
-      int size = fsutil_size(fname);
-      if (size > 512) {
-        char text[size + strlen("END_OF_FILE") + 4];
-        fsutil_seek(fname, 0);
-        fsutil_read(fname, text, size);
-        strcat(text, "END_OF_FILE");
-        strcat(buffer, text);
+        int size = fsutil_size(fname);
+        if (size > 512) {
+            char text[size + strlen("END_OF_FILE") + 4];
+            fsutil_seek(fname, 0);
+            fsutil_read(fname, text, size);
+            strcat(text, "END_OF_FILE");
+            strcat(buffer, text);
 
-        fnames[i] = strdup(fname);
-        i++;
-      }
+            fnames[i] = strdup(fname);
+            i++;
+        }
     }
     dir_close(dir2);
 
 
     for (int i = 0; i < n_files; i++) {
-      fsutil_rm(fnames[i]);
-      remove_from_file_table(fnames[i]);
+        fsutil_rm(fnames[i]);
+        remove_from_file_table(fnames[i]);
     }
-
-    
-    
+  
     /*struct bitmap* bmap = free_map;
     for (int i = 0; i < bitmap_size(bmap); i++) {
       int zo = bitmap_test(bmap, i);
@@ -347,15 +340,15 @@ void recover(int flag) {
           struct file* f = file_open(node);
 
           if (id.length > 0 && !id.is_dir && node->sector > 0) {
-            node->removed = 0;
-            bitmap_set(free_map, i, 1);
-            freesectors++;
+              node->removed = 0;
+              bitmap_set(free_map, i, 1);
+              freesectors++;
 
             int sectors_to_read = 0;
             if (id.length % 512 != 0) {
-              sectors_to_read = i + (id.length/512 + 1);
+                sectors_to_read = i + (id.length/512 + 1);
             } else {
-              sectors_to_read = i + (id.length/512);
+                sectors_to_read = i + (id.length/512);
             }
 
             for (int j = i; j < sectors_to_read; j++) {
@@ -381,56 +374,103 @@ void recover(int flag) {
 
         if (bitmap_test(free_map, i)) {    // If the i-th bit is 1, gives 1.
 
-              /*struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
-              struct inode_disk id = node->data;
-              struct file* f = file_open(node);
-              */
-              char buffer[1024];
-              char newname[18]; 
-              sprintf(newname, "recovered1-%u.txt", i); 
-              
-              memset(buffer, 0, sizeof(buffer)); // Ensure buffer is zeroed out.
-              buffer_cache_read(i, buffer); // Read sector into buffer
-            
-              bool isEmpty = true;
-              for (size_t j = 0; j < sizeof(buffer); j++) {
-                  if (buffer[j] != 0) {
-                      isEmpty = false;
-                      break;
-                  }
-              }
+            char buffer[1024];
+            char newname[18]; 
+            sprintf(newname, "recovered1-%u.txt", i); 
+            memset(buffer, 0, sizeof(buffer)); 
+            buffer_cache_read(i, buffer); 
+        
+            bool isEmpty = true;
+            for (size_t j = 0; j < sizeof(buffer); j++) {
+                if (buffer[j] != 0) {
+                    isEmpty = false;
+                    break;
+                }
+            }
 
-              if (!isEmpty) {
+            if (!isEmpty) {
                 FILE* file = fopen(newname, "w");
                 fputs(buffer, file);
                 fclose(file);
-              }
+            }
         }
     } 
     
   } else if (flag == 2) { // data past end of file.
 
-    // TODO
-  }
+        struct dir *dir;
+        char name[NAME_MAX + 1];
+
+        dir = dir_open_root();
+        if (dir == NULL)
+            return ;
+        
+        while (dir_readdir(dir, name)) {
+            struct file* f = filesys_open(name);
+            struct inode* node = file_get_inode(f);
+            
+            int sectors_to_read = 0;
+            if (fsutil_size(name) % 512 != 0) {
+                sectors_to_read = (fsutil_size(name)/512) + 1;
+            } else {
+                sectors_to_read = (fsutil_size(name)/512);
+            }
+      
+            block_sector_t *blocks = get_inode_data_sectors(node); 
+
+            int last_block = 0;
+
+            for (int i = 0; i < sectors_to_read; i++) {
+                if (blocks[i] != 0) {
+                    last_block = blocks[i];
+                }
+            }
+            printf("lastblock = %i\n", last_block);
+
+            char buffer[1024];
+            char newname[18]; 
+            sprintf(newname, "recovered2-%s.txt", name); 
+                
+            memset(buffer, 0, sizeof(buffer)); 
+            buffer_cache_read(last_block, buffer); 
+            
+            bool isEmpty = true;
+            for (size_t j = 0; j < sizeof(buffer); j++) {
+                if (buffer[j] != 0) {
+                    isEmpty = false;
+                    break;
+                }
+            }
+
+            if (!isEmpty) {
+                FILE* file = fopen(newname, "w");
+                fputs(buffer, file);
+                fclose(file);
+            }
+        } 
+        
+        dir_close(dir);
+    }
 }
 
 
 void read_indirect_block(block_sector_t indirect_block, char *buffer, int *offset) { 
-  block_sector_t sectors[INDIRECT_BLOCKS_PER_SECTOR]; 
-  buffer_cache_read(indirect_block, &sectors); 
-  for (int i = 0; i < INDIRECT_BLOCKS_PER_SECTOR; i++) { 
-    if (sectors[i] != 0) { 
-      buffer_cache_read(sectors[i], buffer + *offset); 
-      *offset += BLOCK_SECTOR_SIZE; } 
-      } 
+    block_sector_t sectors[INDIRECT_BLOCKS_PER_SECTOR]; 
+    buffer_cache_read(indirect_block, &sectors); 
+    for (int i = 0; i < INDIRECT_BLOCKS_PER_SECTOR; i++) { 
+        if (sectors[i] != 0) { 
+            buffer_cache_read(sectors[i], buffer + *offset); 
+            *offset += BLOCK_SECTOR_SIZE; 
+        } 
+    } 
 } 
 
 void read_doubly_indirect_block(block_sector_t doubly_indirect_block, char *buffer, int *offset) { 
-  block_sector_t indirect_blocks[INDIRECT_BLOCKS_PER_SECTOR]; 
-  buffer_cache_read(doubly_indirect_block, &indirect_blocks); 
-  for (int i = 0; i < INDIRECT_BLOCKS_PER_SECTOR; i++) { 
-    if (indirect_blocks[i] != 0) { 
-      read_indirect_block(indirect_blocks[i], buffer, offset); 
-      } 
-  }
+    block_sector_t indirect_blocks[INDIRECT_BLOCKS_PER_SECTOR]; 
+    buffer_cache_read(doubly_indirect_block, &indirect_blocks); 
+    for (int i = 0; i < INDIRECT_BLOCKS_PER_SECTOR; i++) { 
+        if (indirect_blocks[i] != 0) { 
+            read_indirect_block(indirect_blocks[i], buffer, offset); 
+        } 
+    }
 } 
