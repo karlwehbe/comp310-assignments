@@ -426,19 +426,19 @@ void recover(int flag) {
 
             if (bitmap_test(free_map, last_block)) {
                 int remaining_bytes = 512 - (fsutil_size(name) % 512);
-                int filebytes = 512 - remaining_bytes;
+                int file_sectorbytes = 512 - remaining_bytes;
                 
-                printf("lastblock = %i and remaining_bytes = %i and filebytes = %i\n", last_block, remaining_bytes, filebytes);
+                printf("sectorstoread = %i, lastblock = %i and remaining_bytes = %i and filebytes = %i\n", sectors_to_read, last_block, remaining_bytes, file_sectorbytes);
 
                 char buffer[1024];
                 memset(buffer, 0, sizeof(buffer)); 
                 buffer_cache_read(last_block, buffer); 
-                memmove(buffer, buffer + filebytes, sizeof(buffer) - filebytes); 
+                memmove(buffer, buffer + file_sectorbytes, sizeof(buffer) - file_sectorbytes); 
                 
                 char secondbuffer[remaining_bytes+1];
                 memset(secondbuffer, 0, sizeof(secondbuffer)); 
                 struct file* f = get_file_by_fname(name);
-                file_seek(f, filebytes);
+                file_seek(f, file_sectorbytes + (512 * (sectors_to_read - 1)));
                 fsutil_read(name, secondbuffer, remaining_bytes);
                 
                 printf("second buffer = %s\n", secondbuffer);
