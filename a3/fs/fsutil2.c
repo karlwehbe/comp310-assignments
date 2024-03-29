@@ -154,10 +154,7 @@ void fragmentation_degree() {
         sectors_to_read = (fsutil_size(name)/512);
       }
 
-      //if (sectors_to_read == 1) {
-       // block_sector_t *blocks = get_inode_data_sectors(node);
-        //if (blocks[0] != 0) bitmap_mark(bmap, blocks[0]);
-      //}
+    
       //printf("sectors to read = %i\n", sectors_to_read);
 
       if (sectors_to_read > 1) {
@@ -245,10 +242,23 @@ int defragment() {
     }
     dir_close(dir2);
 
+    /*struct bitmap* bmap = free_map;
+    for (int i = 0; i < bitmap_size(bmap); i++) {
+      int zo = bitmap_test(bmap, i);
+      printf("%i", zo);
+    }*/
+
+
     for (int i = 0; i < n_files; i++) {
       fsutil_rm(fnames[i]);
     }
-
+   
+    
+    /*for (int i = 0; i < bitmap_size(bmap); i++) {
+      int zo = bitmap_test(bmap, i);
+      printf("%i", zo);
+    } */
+    // successfully removes bitmaps
 
     char* start = buffer;
     char* end = NULL;
@@ -294,6 +304,8 @@ int defragment() {
         partsCount++;
     }
 
+    free_file_table();
+
     for (int i = 0; i < n_files; i++) {
         fsutil_create((const char*) fnames[i], strlen(parts[i])-1);
         fsutil_write(fnames[i], parts[i], strlen(parts[i])-1);
@@ -305,6 +317,13 @@ int defragment() {
     
 
     fragmentation_degree();
+    
+    /*for (int i = 0; i < bitmap_size(bmap); i++) {
+      int zo = bitmap_test(bmap, i);
+      printf("%i", zo);
+      if (zo == 0) printf("i=%i", i);
+    }*/ 
+    // succesfully fills bitmap with correct 0 - 1;
 
     return 0;
 }
@@ -356,13 +375,13 @@ void recover(int flag) {
   } else if (flag == 1) { // recover all non-empty sectors
     struct bitmap* bmap = free_map;
   
-    for (int i = 4; i < bitmap_size(bmap); i++) {
+    for (int i = 74; i < bitmap_size(bmap); i++) {
 
         if (bitmap_test(bmap, i)) {    // If the i-th bit is 1, gives 1.
             struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
             struct inode_disk id = node->data;
             struct file* f = file_open(node);
-            printf("sector = %i\n", node->sector);
+            //printf("sector = %i\n", node->sector);
 
             if (id.length > 0 && !id.is_dir && node->sector > 3 && node->removed == 1) {
               
@@ -373,14 +392,14 @@ void recover(int flag) {
                 sectors_to_read = id.length/512;
               }
 
-              printf("before i=%i\n", i);
+              //printf("before i=%i\n", i);
               i += sectors_to_read;
-              printf("after i=%i\n", i);
+              //printf("after i=%i\n", i);
 
               char newname[17]; 
               sprintf(newname, "recovered1-%u.txt", node->sector); 
               add_to_file_table(f, newname);
-              printf("newname = %s\n", newname);
+              //printf("newname = %s\n", newname);
 
               copy_out(newname);
               fsutil_rm(newname);
