@@ -430,18 +430,11 @@ void recover(int flag) {
                 
                 printf("sectorstoread = %i, lastblock = %i and remaining_bytes = %i and filebytes = %i\n", sectors_to_read, last_block, remaining_bytes, file_sectorbytes);
 
-                char buffer[1024];
+                char buffer[512];
                 memset(buffer, 0, sizeof(buffer)); 
                 buffer_cache_read(last_block, buffer); 
                 memmove(buffer, buffer + file_sectorbytes, sizeof(buffer) - file_sectorbytes); 
                 
-                char secondbuffer[remaining_bytes+1];
-                memset(secondbuffer, 0, sizeof(secondbuffer)); 
-                struct file* f = get_file_by_fname(name);
-                file_seek(f, file_sectorbytes + (512 * (sectors_to_read - 1)));
-                fsutil_read(name, secondbuffer, remaining_bytes);
-                
-                printf("second buffer = %s\n", secondbuffer);
 
                 bool isEmpty = true;
                 for (size_t j = 0; j < sizeof(buffer); j++) {
@@ -451,24 +444,14 @@ void recover(int flag) {
                     }
                 }
 
-                bool isEmpty2 = true;
-                for (size_t j = 0; j < sizeof(secondbuffer); j++) {
-                    if (secondbuffer[j] != 0) {
-                        isEmpty2 = false;
-                        break;
-                    }
-                }
-
                 if (isEmpty) printf("Is empty\n");
-                if (isEmpty2) printf("Is empty2\n");
-                
+        
                 char newname[18]; 
                 sprintf(newname, "recovered2-%s.txt", name); 
 
-                if (!isEmpty || !isEmpty2) {
+                if (!isEmpty) {
                     FILE* file = fopen(newname, "w");
-                    fputs(buffer, file);
-                    fputs(secondbuffer, file);
+                    fputs(buffer + 1, file);
                     fclose(file);
                 }
             } 
