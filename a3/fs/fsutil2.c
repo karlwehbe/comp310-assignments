@@ -240,7 +240,6 @@ int defragment() {
 
     for (int i = 0; i < n_files; i++) {
         fsutil_rm(fnames[i]);
-        remove_from_file_table(fnames[i]);
     }
   
 
@@ -292,11 +291,11 @@ int defragment() {
     for (int i = 0; i < n_files; i++) {
         fsutil_create((const char*) fnames[i], strlen(parts[i])-1);
         fsutil_write(fnames[i], parts[i], strlen(parts[i])-1);
+        free(fnames[i]);
     }
 
     free(buffer); 
     free(fnames);
-  
     
     return 0;
 }
