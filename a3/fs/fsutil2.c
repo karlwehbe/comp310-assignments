@@ -15,6 +15,8 @@
 #include <string.h>
 
 
+
+
 int copy_in(char *fname) {
 
     // still need to add extreme cases, if no space in memory
@@ -214,9 +216,10 @@ int defragment() {
         return 0;
     }
 
-    char** fnames = malloc(n_files * sizeof(char*));
-    char* buffer =  malloc((size_of_all_files+1 + n_files * 16) * sizeof(char));
-    buffer[0] = '\0';
+     struct newfiles* files = malloc(n_files * sizeof(struct newfiles));
+    if (files == NULL) {
+        return -1; // Memory allocation failed
+    }
 
     struct dir *dir2 = dir_open_root();
     char fname[NAME_MAX + 1];
@@ -224,79 +227,34 @@ int defragment() {
     while (dir_readdir(dir2, fname) && i < n_files) {
         int size = fsutil_size(fname);
         if (size > 512) {
-            char text[size + strlen("END_OF_FILE") + 4];
-            struct file* f = filesys_open(fname);
-            file_seek(f, 0);
-            file_read(f, text, size);
-            strcat(text, "END_OF_FILE");
-            strcat(buffer, text);
+            files[i].content = malloc(size + strlen("END_OF_FILE") + 4);
+            files[i].name = strdup(name);
+            files[i].size = size;
 
-            fnames[i] = strdup(fname);
+            struct file* f = filesys_open(name);
+            file_seek(f, 0);
+            file_read(f, files[i].content, size);
+            strcat(files[i].content, "END_OF_FILE");
+
             i++;
         }
     }
     dir_close(dir2);
 
-
     for (int i = 0; i < n_files; i++) {
-        fsutil_rm(fnames[i]);
+        fsutil_rm(files[i].name);
     }
   
-
-    char* start = buffer;
-    char* end = NULL;
-    int delimiterLen = strlen("END_OF_FILE");
-    char** parts = malloc(n_files * sizeof(char*) + size_of_all_files);
-
-    if (!parts) {
-        free(buffer);
-        return -1;
-    }
-
-    int partsCount = 0;
-    while ((end = strstr(start, "END_OF_FILE")) != NULL) {
-        int partSize = end - start + 2;
-        parts[partsCount] = malloc(partSize + 1);
-        if (!parts[partsCount]) {
-            for (int i = 0; i < partsCount; ++i) {
-                free(parts[i]);
-            }
-            free(parts);
-            free(buffer);
-            return -1;
-        }
-        strncpy(parts[partsCount], start, partSize);
-        parts[partsCount][partSize] = '\0'; 
-        start = end + delimiterLen; 
-        partsCount++;
-    }
-
-    if (*start) {
-        int partSize = strlen(start);
-        parts[partsCount] = malloc(partSize + 1); 
-        if (!parts[partsCount]) {
-            for (int i = 0; i < partsCount; ++i) {
-                free(parts[i]);
-            }
-            free(parts);
-            free(buffer);
-            return -1;
-        }
-
-        strcpy(parts[partsCount], start);
-        partsCount++;
-    }
-
-
     for (int i = 0; i < n_files; i++) {
-        fsutil_create((const char*) fnames[i], strlen(parts[i])-1);
-        fsutil_write(fnames[i], parts[i], strlen(parts[i])-1);
-        free(fnames[i]);
+        fsutil_create(files[i].name, files[i].size);
+        fsutil_write(files[i].name, files[i].content, files[i].size);
+        free(files[i].name);
+        free(files[i].content);
     }
 
-    free(buffer); 
-    free(fnames);
-    
+    free(files);
+
+    return 0;
     return 0;
 }
 
