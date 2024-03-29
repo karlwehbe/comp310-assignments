@@ -316,37 +316,39 @@ int defragment() {
     // succesfully fills bitmap with correct 0 - 1;
 
     int z = 0;
-    struct bitmap* bmap = free_map;
-    for (int i = 0; i < bitmap_size(bmap); i++) {
-      int zo = bitmap_test(bmap, i);
+    for (int i = 0; i < bitmap_size(free_map); i++) {
+      int zo = bitmap_test(free_map, i);
       printf("%i", zo);
       if (zo == 0) z++;
     }
-    printf("\nfreesectors = %i\n", z);
+    printf("\nfreesectors = %i and same test = %li\n", z, bitmap_count(free_map, 0, bitmap_size(free_map), 0));
 
     for (int i = 0; i < bitmap_size(free_map); i++) {
-   
-        struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
-        struct inode_disk id = node->data;
-        struct file* f = file_open(node);
+      if (!bitmap_test(free_map, i)) {    
+          struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
+          struct inode_disk id = node->data;
+          struct file* f = file_open(node);
 
-        if (id.length > 0 && !id.is_dir && node->sector > 0) {
-          node->removed = 0;
-          bitmap_set(bmap, i, 1);
-          
+          if (id.length > 0 && !id.is_dir && node->sector > 0) {
+            node->removed = 0;
+            bitmap_set(free_map, i, 1);
+            
 
-          int sectors_to_read = 0;
-          if (id.length % 512 != 0) {
-            sectors_to_read = i + (id.length/512 + 1);
-          } else {
-            sectors_to_read = i + (id.length/512);
+            int sectors_to_read = 0;
+            if (id.length % 512 != 0) {
+              sectors_to_read = i + (id.length/512 + 1);
+            } else {
+              sectors_to_read = i + (id.length/512);
+            }
+
+            for (int j = i; j < sectors_to_read; j++) {
+                bitmap_set(free_map, j, 1);
+            }
           }
-           for (int j = i; j < sectors_to_read; j++) {
-            bitmap_set(bmap, j, 1);
-          }
-        }
+      }
     }
-
+    
+    printf("\nAfter = freesectors = %i and same test = %li\n", z, bitmap_count(free_map, 0, bitmap_size(free_map), 0));
     return 0;
 }
 
@@ -355,19 +357,18 @@ int defragment() {
 void recover(int flag) {
   if (flag == 0) {            // recover deleted inodes
    
-    struct bitmap* bmap = free_map;
     int freesectors = 0;
 
-    for (int i = 0; i < bitmap_size(bmap); i++) {
+    for (int i = 0; i < bitmap_size(free_map); i++) {
 
-      if (!bitmap_test(bmap, i)) {    // If the i-th bit is 0 (free sector), gives 1 if removed/empty
+      if (!bitmap_test(free_map, i)) {    // If the i-th bit is 0 (free sector), gives 1 if removed/empty
           struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
           struct inode_disk id = node->data;
           struct file* f = file_open(node);
 
           if (id.length > 0 && !id.is_dir && node->sector > 0) {
             node->removed = 0;
-            bitmap_set(bmap, i, 1);
+            bitmap_set(free_map, i, 1);
             freesectors++;
 
             int sectors_to_read = 0;
@@ -378,7 +379,7 @@ void recover(int flag) {
             }
 
             for (int j = i; j < sectors_to_read; j++) {
-                bitmap_set(bmap, j, 1);
+                bitmap_set(free_map, j, 1);
                 freesectors++;
             }
 
@@ -395,11 +396,10 @@ void recover(int flag) {
 
 
   } else if (flag == 1) { // recover all non-empty sectors
-    struct bitmap* bmap = free_map;
   
-    for (int i = 74; i < bitmap_size(bmap); i++) {
+    for (int i = 74; i < bitmap_size(free_map); i++) {
 
-        if (bitmap_test(bmap, i)) {    // If the i-th bit is 1, gives 1.
+        if (bitmap_test(free_map, i)) {    // If the i-th bit is 1, gives 1.
             struct inode *node = inode_open(i);     //only gives an inode if its the sector of the inode, if represnts the data, it will not give back an inode.
             struct inode_disk id = node->data;
             struct file* f = file_open(node);
