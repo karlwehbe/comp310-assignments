@@ -436,7 +436,7 @@ void recover(int flag) {
                 memmove(buffer, buffer + filebytes, sizeof(buffer) - filebytes); 
                 
                 char secondbuffer[remaining_bytes+1];
-                memset(secondbuffer, 0, sizeof(buffer)); 
+                memset(secondbuffer, 0, sizeof(secondbuffer)); 
                 struct file* f = get_file_by_fname(name);
                 file_seek(f, filebytes);
                 fsutil_read(name, secondbuffer, remaining_bytes);
