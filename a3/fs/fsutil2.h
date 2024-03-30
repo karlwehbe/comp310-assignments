@@ -2,6 +2,7 @@
 #define FILESYS_FSUTIL2_H
 
 //Karl WEHBE - 261085350
+//Hongxin HUO - 260979980
 struct newfiles { 
     char* content;      // contains the content of a file
     char* name;         // contains the name of a file

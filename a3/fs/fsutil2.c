@@ -15,7 +15,7 @@
 #include <string.h>
 
 //Karl WEHBE - 261085350
-
+//Hongxin HUO - 260979980
 
 int copy_in(char *fname) {
     FILE *source = fopen(fname, "r");
