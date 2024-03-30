@@ -35,26 +35,20 @@ int copy_in(char *fname) {
         sectors_towrite = (fileSize/512);
     }
 
-    //printf("sectorsavailable = %i, sectorstowrite = %i\n", sectorsavailable, sectors_towrite);
-
     int allocated_indirect = 0;
-    if (sectorsavailable > 123 && sectors_towrite > 123) { 
-        if (sectorsavailable > 123+129 && sectors_towrite > 123+129) {
+    if (sectorsavailable > 123 && sectors_towrite > 123) {                  //checks if we will need to allocate indirect blocks and how many
+        if (sectorsavailable > 123+129 && sectors_towrite > 123+129) {          
             allocated_indirect = 17;
         } else {
            allocated_indirect = 2;
         }
-
     } else { allocated_indirect = 0; }
 
-    if (sectorsavailable - allocated_indirect < sectors_towrite) {
-        newSize = (sectorsavailable - allocated_indirect) * 512 - 1;
+    if (sectorsavailable - allocated_indirect < sectors_towrite) {      //if file is bigger than available space (counting also the indirect and doubly indirect blocks)
+        newSize = (sectorsavailable - allocated_indirect) * 512 - 1;    // we change the size/number of bytes that will be read from the file to the maximum possible.
     } else {
-        newSize = fileSize;
-    }
-    
-    
-    //printf("newsize = %i\n", newSize);
+        newSize = fileSize;                                             // if not, we keep the same size
+    }       
 
     int res = fsutil_create(fname, newSize);
     if (res != 1) {
@@ -67,12 +61,11 @@ int copy_in(char *fname) {
     }
 
     char buffer[newSize];
-    for (int i = 0; i < newSize; i++) {
-        buffer[i] = fgetc(source);
+    for (int i = 0; i < newSize; i++) {         
+        buffer[i] = fgetc(source);              //reads file one char at a time
     }
     
-    fsutil_write(fname, buffer, newSize + 1);
-
+    fsutil_write(fname, buffer, newSize + 1);       
     fclose(source);
     return 0;
 }
@@ -111,7 +104,7 @@ void find_file(char *pattern) {
     if (dir == NULL)
         return ;
 
-    while (dir_readdir(dir, name)) {
+    while (dir_readdir(dir, name)) {            //goes threw all files in the directory 
         int size = fsutil_size(name);
         char* buffer =  malloc((size+1) * sizeof(char));
         memset(buffer, 0, size + 1);
@@ -120,7 +113,7 @@ void find_file(char *pattern) {
         fsutil_seek(name, 0);
         fsutil_read(name, buffer, size);
 
-        if (strstr(buffer, pattern)) {
+        if (strstr(buffer, pattern)) {      //checks if any files contains the pattern and if it does, prints the filename .
             printf("%s\n", name);
         }
     }
@@ -140,7 +133,7 @@ void fragmentation_degree() {
     int n_fragmented = 0;
     int n_fragmentable = 0;
 
-    while (dir_readdir(dir, name)) {
+    while (dir_readdir(dir, name)) {        //goes threw all files in directory.
         struct file* f = filesys_open(name);
         struct inode* node = file_get_inode(f);
         
@@ -151,8 +144,8 @@ void fragmentation_degree() {
             sectors_to_read = (fsutil_size(name)/512);
         }
     
-        if (sectors_to_read > 1) {
-            n_fragmentable++;
+        if (sectors_to_read > 1) {      //if the file occupies more than 1 sector.
+            n_fragmentable++;            
             block_sector_t *blocks = get_inode_data_sectors(node);
             for (int i = 0; i < sectors_to_read; i++) {
                 int place = 0;
@@ -162,7 +155,7 @@ void fragmentation_degree() {
                 place = blocks[i-1];
                 }
 
-                if (blocks[i] - place > 3 && blocks[i] != 0) {
+                if (blocks[i] - place > 3 && blocks[i] != 0) {      //checks if the difference between 2 contiguous sectors is > 3
                     n_fragmented++;
                     break;
                 }
@@ -188,7 +181,7 @@ int defragment() {
 
     int n_files = 0;
     while (dir_readdir(dir, name)) {
-          n_files++;
+          n_files++;        //checks the number of files in the directory to know how much space to allocate for files array.
     }
     dir_close(dir);
 
@@ -196,7 +189,7 @@ int defragment() {
         return 0;
     }
 
-    struct newfiles* files = malloc(n_files * sizeof(struct newfiles));
+    struct newfiles* files = malloc(n_files * sizeof(struct newfiles));    //creates an array that will store information about each file
     if (files == NULL) {
         return -1;
     }
@@ -204,26 +197,26 @@ int defragment() {
     struct dir *dir2 = dir_open_root();
     char fname[NAME_MAX + 1];
     int i = 0;
-    while (dir_readdir(dir2, fname) && i < n_files) {
-        int size = fsutil_size(fname);
-        files[i].content = malloc(size + 4);
-        files[i].name = strdup(fname);
-        files[i].size = size;
+    while (dir_readdir(dir2, fname) && i < n_files) {    // for each file in the directory V
+        int size = fsutil_size(fname);              
+        files[i].content = malloc(size + 4);            
+        files[i].name = strdup(fname);          // puts filename into array
+        files[i].size = size;                   // puts size into array
 
         struct file* f = filesys_open(fname);
         file_seek(f, 0);
-        file_read(f, files[i].content, size);
+        file_read(f, files[i].content, size);   // puts the content of the file into array
         i++;
     }
     dir_close(dir2);
 
     for (int i = 0; i < n_files; i++) {
-        fsutil_rm(files[i].name);
+        fsutil_rm(files[i].name);           //removes all old files
     }
   
     for (int i = 0; i < n_files; i++) {
         fsutil_create(files[i].name, files[i].size);
-        fsutil_write(files[i].name, files[i].content, files[i].size);
+        fsutil_write(files[i].name, files[i].content, files[i].size);     //adds all files one at a time so that their datablocks can be contiguous.
         free(files[i].name);
         free(files[i].content);
     }
@@ -246,7 +239,7 @@ void recover(int flag) {
 
             if (id.length > 0 && !id.is_dir && node->sector > 0) {
                 node->removed = 0;
-                bitmap_set(free_map, i, 1);
+                bitmap_set(free_map, i, 1);     //resets the corresponding inode sector bit to 1;
                 freesectors++;
 
                 int sectors_to_read = 0;
@@ -257,7 +250,7 @@ void recover(int flag) {
                 }
 
                 for (int j = i; j < sectors_to_read; j++) {
-                    bitmap_set(free_map, j, 1);
+                    bitmap_set(free_map, j, 1);         //resets the bits corresponding to the data blocks of the file to 1.
                     freesectors++;
                 }
 
@@ -274,26 +267,26 @@ void recover(int flag) {
 
   } else if (flag == 1) { // recover all non-empty sectors
   
-        for (int i = 4; i < bitmap_size(free_map); i++) {
+        for (int i = 4; i < bitmap_size(free_map); i++) {   //to iterates through the bitmap
 
             if (bitmap_test(free_map, i)) {    // If the i-th bit is 1, gives 1.
                 char buffer[1024];
                 char newname[18]; 
                 sprintf(newname, "recovered1-%u.txt", i); 
                 memset(buffer, 0, sizeof(buffer)); 
-                buffer_cache_read(i, buffer); 
+                buffer_cache_read(i, buffer);       //puts the content of the sector into the buffer
             
-                bool isEmpty = true;
+                bool isEmpty = true;      
                 for (size_t j = 0; j < sizeof(buffer); j++) {
-                    if (buffer[j] != 0) {
-                        isEmpty = false;
+                    if (buffer[j] != 0) {           // checks that the buffer isn't empty.
+                        isEmpty = false;       
                         break;
                     }
                 }
 
                 if (!isEmpty) {
                     FILE* file = fopen(newname, "w");
-                    fputs(buffer, file);
+                    fputs(buffer, file);        //saves the content of the sector into a file on the real filesystem
                     fclose(file);
                 }
             }
@@ -312,7 +305,7 @@ void recover(int flag) {
             struct inode* node = file_get_inode(f);
             
             int sectors_to_read = 0;
-            if (fsutil_size(name) % 512 != 0) {
+            if (fsutil_size(name) % 512 != 0) {     //checks the number of sectors that a file occupies
                 sectors_to_read = (fsutil_size(name)/512) + 1;
             } else {
                 sectors_to_read = (fsutil_size(name)/512);
@@ -322,24 +315,22 @@ void recover(int flag) {
             int last_block = 0;
             for (int i = 0; i < sectors_to_read; i++) {
                 if (blocks[i] != 0) {
-                    last_block = blocks[i];
+                    last_block = blocks[i];             // iterate to find the files last block.
                 }
             }
 
-            if (bitmap_test(free_map, last_block)) {
-                int remaining_bytes = 512 - (fsutil_size(name) % 512);
-                int file_sectorbytes = 512 - remaining_bytes;
-                
-                printf("sectorstoread = %i, lastblock = %i and remaining_bytes = %i and filebytes = %i\n", sectors_to_read, last_block, remaining_bytes, file_sectorbytes);
+            if (bitmap_test(free_map, last_block)) {        //checks that the sector is non-zero
+                int remaining_bytes = 512 - (fsutil_size(name) % 512);  //checks how many bytes will need to be read.
+                int file_sectorbytes = 512 - remaining_bytes;   // checks how many bytes in the sector belong to the file
 
                 char buffer[512];
                 memset(buffer, 0, sizeof(buffer)); 
-                buffer_cache_read(last_block, buffer); 
-                memmove(buffer, buffer + file_sectorbytes, sizeof(buffer) - file_sectorbytes); 
+                buffer_cache_read(last_block, buffer);      //reads content of that sector.
+                memmove(buffer, buffer + file_sectorbytes, sizeof(buffer) - file_sectorbytes);    // removes all the contents in the sector belonging to the file and keeps what doesn't belong to it.
                 
                 bool isEmpty = true;
                 for (size_t j = 0; j < sizeof(buffer); j++) {
-                    if (buffer[j] != 0) {
+                    if (buffer[j] != 0) {       //checks that the buffer is not empty.
                         isEmpty = false;
                         break;
                     }
@@ -350,7 +341,7 @@ void recover(int flag) {
 
                 if (!isEmpty) {
                     FILE* file = fopen(newname, "w");
-                    fputs(buffer + 1, file);
+                    fputs(buffer + 1, file);        //saves data found in sector on real filesystem.
                     fclose(file);
                 }
             } 

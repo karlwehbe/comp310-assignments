@@ -2,9 +2,9 @@
 #define FILESYS_FSUTIL2_H
 
 struct newfiles { 
-    char* content;
-    char* name;
-    int size;
+    char* content;      // contains the content of a file
+    char* name;         // contains the name of a file
+    int size;           // contains the size of a file
 };
 
 int copy_in(char *fname);
