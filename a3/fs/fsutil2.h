@@ -1,6 +1,7 @@
 #ifndef FILESYS_FSUTIL2_H
 #define FILESYS_FSUTIL2_H
 
+//Karl WEHBE - 261085350
 struct newfiles { 
     char* content;      // contains the content of a file
     char* name;         // contains the name of a file
