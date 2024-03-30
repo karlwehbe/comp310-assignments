@@ -28,23 +28,30 @@ int copy_in(char *fname) {
     int spaceavailable = fsutil_freespace();
     int newSize = 0;
 
-    int bytesavailable = 0;
+    int sectorsavailable = 0;
     
     if (spaceavailable > 0) {
-        if (fileSize <= 123*512) { bytesavailable = (spaceavailable - 1) * 512; }
+        if (fileSize <= 123*512) { sectorsavailable = spaceavailable - 1; }
         
-        else if (fileSize <= 123*512 + 128*512) { bytesavailable = (spaceavailable - 2) * 512; }
+        else if (fileSize <= 123*512 + 128*512) { sectorsavailable = spaceavailable - 2; }
             
-        else if (fileSize > 123*512 + 128*512) { bytesavailable = (spaceavailable - 17) * 512 - 1; }
+        else if (fileSize > 123*512 + 128*512) { sectorsavailable = spaceavailable - 17; }
 
-        if (bytesavailable > fileSize) {
+        int sectors_forfile =  0;
+        if (sectors_forfile % 512 != 0) {
+            sectors_forfile = (fileSize/512) + 1;
+        } else {
+            sectors_forfile = (fileSize/512);
+        }
+
+        if (sectorsavailable > sectors_forfile) {
             newSize = fileSize;
         } else { 
-            newSize = bytesavailable;
+            newSize = sectorsavailable * 512 - 1;
         }
     }
 
-    int res = fsutil_create(fname, 20);
+    int res = fsutil_create(fname, newSize);
     if (res != 1) {
         fclose(source);
         return 2;
