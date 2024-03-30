@@ -25,31 +25,36 @@ int copy_in(char *fname) {
     int fileSize = ftell(source);
     rewind(source);
 
-    int spaceavailable = fsutil_freespace();
     int newSize = 0;
-
-    int sectorsavailable = 0;
+    int sectorsavailable = fsutil_freespace() - 1;
     
-    if (spaceavailable > 0) {
-        if (fileSize <= 123*512) { sectorsavailable = spaceavailable - 1; }
-        
-        else if (fileSize <= 123*512 + 128*512) { sectorsavailable = spaceavailable - 2; }
-            
-        else if (fileSize > 123*512 + 128*512) { sectorsavailable = spaceavailable - 17; }
-
-        int sectors_forfile =  0;
-        if (sectors_forfile % 512 != 0) {
-            sectors_forfile = (fileSize/512) + 1;
-        } else {
-            sectors_forfile = (fileSize/512);
-        }
-
-        if (sectorsavailable > sectors_forfile) {
-            newSize = fileSize;
-        } else { 
-            newSize = sectorsavailable * 512 - 1;
-        }
+    int sectors_towrite =  0;
+    if (fileSize % 512 != 0) {
+        sectors_towrite = (fileSize/512) + 1;
+    } else {
+        sectors_towrite = (fileSize/512);
     }
+
+    //printf("sectorsavailable = %i, sectorstowrite = %i\n", sectorsavailable, sectors_towrite);
+
+    int allocated_indirect = 0;
+    if (sectorsavailable > 123 && sectors_towrite > 123) { 
+        if (sectorsavailable > 123+129 && sectors_towrite > 123+129) {
+            allocated_indirect = 17;
+        } else {
+           allocated_indirect = 2;
+        }
+
+    } else { allocated_indirect = 0; }
+
+    if (sectorsavailable - allocated_indirect < sectors_towrite) {
+        newSize = (sectorsavailable - allocated_indirect) * 512 - 1;
+    } else {
+        newSize = fileSize;
+    }
+    
+    
+    //printf("newsize = %i\n", newSize);
 
     int res = fsutil_create(fname, newSize);
     if (res != 1) {
