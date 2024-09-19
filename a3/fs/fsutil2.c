@@ -181,7 +181,7 @@ int defragment() {
 
     int n_files = 0;
     while (dir_readdir(dir, name)) {
-          n_files++;        //checks the number of files in the directory to know how much space to allocate for files array.
+        n_files++;        //checks the number of files in the directory to know how much space to allocate for files array.
     }
     dir_close(dir);
 
